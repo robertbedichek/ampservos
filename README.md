@@ -92,6 +92,12 @@ Its lowest parts sit about 23 mm above the panel, and the shelf reaches about 75
 shaft line. Check that there's room for this on your amp. Set `board = false` to leave the shelf off.
 The set-screw windows face the servo-body side.
 
+Slice with the MK3S PETG settings in `slicer/petg_mk3s.ini` (0.20 mm QUALITY, Prusament PETG,
+4 perimeters, 40% infill, no supports):
+`PrusaSlicer --export-gcode --load slicer/petg_mk3s.ini stl/frame.stl --output gcode/ampservo-frame_PETG.gcode`.
+About 10 h for the frame and 4 h for the four coupler sets. PrusaSlicer warns about bridging on the
+servo-pocket floors (21 mm spans), which is expected.
+
 Print in **PETG or ASA**, not PLA: the top panel of a tube amp gets warm.
 Print the frame plate-down.
 
