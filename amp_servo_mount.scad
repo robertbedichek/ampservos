@@ -11,7 +11,7 @@ part = "assembly";  // "assembly" | "frame" | "hub_pot" | "hub_servo" | "disc" |
 
 /* ---------- Amp ---------- */
 n_pots      = 4;
-pitch       = 38.0;   // MEASURE: shaft center-to-center spacing
+pitch       = 34.70;  // measured: 1.366" center-to-center (1.616" outside-to-outside minus 1/4")
 nut_af      = 12.7;   // MEASURE: pot nut across flats (1/2" typical for 3/8"-32 bushings)
 nut_h       = 3.5;    // MEASURE: nut + washer height above the panel
 bushing_d   = 9.6;    // 3/8" threaded bushing

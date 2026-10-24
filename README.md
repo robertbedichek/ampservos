@@ -72,7 +72,7 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 
 | parameter | what |
 |---|---|
-| `pitch` | shaft center-to-center spacing (most important) |
+| `pitch` | shaft center-to-center spacing (measured: 1.366" = 34.70 mm) |
 | `nut_af`, `nut_h` | pot nut size across flats, and nut + washer height |
 | `bushing_top`, `shaft_top` | heights above the panel, with the knobs removed |
 | horn dims | from the actual horn (servo dims are from the goBILDA drawing) |
