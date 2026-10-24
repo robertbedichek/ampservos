@@ -39,8 +39,8 @@ Besides the printed frame and couplers. Prices are rough.
 
 | Qty | Part | Notes | ~Price |
 |---|---|---|---|
-| 4 (+1 spare) | **goBILDA 2000-0025-0002** Dual Mode Servo (25-2 Torque) | 300° in servo mode over 500–2500 µs. **Not** the 5-turn 2000-0025-0502, which spreads ~1800° over the same pulses. | $35–50 ea |
-| 4 | Round disc servo horns, **25-tooth spline**, ~24 mm | If not included with the servo; set the `horn_*` values to match | $5 ea |
+| 4 (+1 spare) | **goBILDA 2000-0025-0002** Dual Mode Servo (25-2 Torque) | 300° in servo mode over 500–2500 µs. **Not** the 5-turn 2000-0025-0502, which spreads ~1800° over the same pulses. Not on Amazon: buy from [goBILDA](https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/), [ServoCity](https://www.servocity.com/2000-series-dual-mode-servo-25-2) or [RobotShop](https://www.robotshop.com/products/servocity-2000-series-dual-mode-servo-25-2-torque). | $37 ea |
+| 4 | Round disc servo horns, **25-tooth spline**, ~24 mm | Horns don't appear to come with the servo; goBILDA sells 25T arms and hubs, so order them with the servos. Set the `horn_*` values to match. | $5 ea |
 | 4 | Servo extension cables, 300 mm | Only if the leads don't reach; route away from the input jack | $2 ea |
 
 ### Hardware
@@ -59,7 +59,7 @@ Besides the printed frame and couplers. Prices are rough.
 
 Calipers, 1.5 mm hex key (M3 set screws), small screwdriver.
 
-**Rough total:** $260–330.
+**Rough total:** $260–300.
 
 ## Before printing: measure these
 
