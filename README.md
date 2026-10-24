@@ -81,6 +81,10 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 | `bushing_top`, `shaft_top` | heights above the panel, with the knobs removed |
 | `horn_*` | set for a 19.8 mm aluminum 25T horn (14 mm M3 hole circle). Change them if you use a different horn. (Servo dims are from the goBILDA drawing.) |
 
+Start with a fit test in PETG: one coupler set (`part="couplers"` makes four sets, so print one of each
+piece) and `part="test_station"`, a single tube cut from the frame. Check that the nut pocket centers on
+the pot nut, the servo holes line up, the coupler turns freely, and the set screw is reachable.
+
 Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers`).
 
 The 1061 board hangs component-side down, under a shelf on the side away from the servo bodies.

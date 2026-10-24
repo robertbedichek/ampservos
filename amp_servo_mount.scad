@@ -7,7 +7,7 @@
 // Units: mm. Z = 0 is the control-panel surface; X runs along the row of knobs.
 // Values marked MEASURE must be checked with calipers before printing.
 
-part = "assembly";  // "assembly" | "frame" | "hub_pot" | "hub_servo" | "disc" | "couplers"
+part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers"
 
 /* ---------- Amp ---------- */
 n_pots      = 4;
@@ -53,7 +53,8 @@ setscrew  = 2.9;     // M3 set screw clearance hole (thread-forming) ...
 m3_nut_af = 5.7;     // ... with a captive nut slot
 
 /* ---------- Frame ---------- */
-plate_t   = 6.0;
+floor_t   = 1.2;     // floor under the servo pocket, so the tube walls don't start in midair when printing
+plate_t   = flange_to_horn - spline_h + 0.4 + floor_t;  // pocket swallows the servo case below the ears
 wall      = 2.5;
 clear     = 1.0;     // radial clearance around rotating parts
 tube_id   = max(horn_d, hub_d) + 2 * clear;
@@ -79,17 +80,18 @@ $fn = 72;
 eps = 0.01;
 
 /* ---------- Derived stack heights ---------- */
-hubA_h   = grip_len + 2 + key_h;
+tongue_h = key_h - 0.2;
+hubA_h   = grip_len + 3;                    // body; its tongue stands on top
 hubA_z0  = shaft_top - grip_len;
-disc_t   = 3.0;
-disc_h   = disc_t + 2 * (key_h - 0.2);
-hubB_h   = key_h + 4.5;
-hubB_z0  = hubA_z0 + hubA_h + gap + disc_t + gap;
+disc_h   = 2 * key_h + 1.5;                 // slot in each face, 1.5 mm web where they cross
+hubB_h   = 6.0;                             // body; its tongue hangs below
+hubB_z0  = hubA_z0 + hubA_h + gap + disc_h + gap;
 horn_z0  = hubB_z0 + hubB_h;
 flange_z = horn_z0 + horn_h + flange_to_horn - spline_h;  // horn bottoms out at the spline root
 plate_z0 = flange_z - plate_t;
 
 assert(hubA_z0 > bushing_top + 0.5, "shaft too short: hub would hit bushing; reduce grip_len");
+assert(hubA_z0 > nut_h + 0.3 + (tube_id - (nut_af / cos(30) + 0.6)) / 2, "pot hub would sit in the cone under the bore");
 assert(pitch > servo_W + 3, "pitch too tight for side-by-side servos");
 if (pitch < tube_od + 2) echo("WARNING: tubes merge; fine, but check knob spacing");
 
@@ -106,9 +108,10 @@ module servo_holes() {
 
 module servo_body_cut() {
     c = servo_dir * spline_offset;
-    // body passes through the plate, plus clearance below it for the case top
-    translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 - (flange_to_horn - plate_t) - 1])
-        cube([servo_W + 1, servo_L + 1, flange_to_horn + 2]);
+    // the case below the ears sits in a pocket in the plate; the horn turns in a hole through its floor
+    translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 + floor_t])
+        cube([servo_W + 1, servo_L + 1, plate_t]);
+    translate([0, 0, plate_z0 - 1]) cylinder(d = tube_id, h = floor_t + 2);
 }
 
 // Plate edge on the side away from the servo bodies, as a distance from the pot axes.
@@ -156,12 +159,8 @@ module tube(i) {
 }
 
 module nut_seat(i) {
-    // thick ring at the bottom that registers on the nut
-    translate([x_of(i), 0, 0]) difference() {
-        cylinder(d = tube_od, h = nut_h + 2);
-        translate([0, 0, -eps]) cylinder(d = pocket_d, h = nut_h + 0.3);
-        translate([0, 0, -eps]) cylinder(d = bushing_d + 2, h = 20);
-    }
+    // solid at the bottom of the tube; frame() cuts the nut pocket and the cone up to the bore from it
+    translate([x_of(i), 0, 0]) cylinder(d = tube_od, h = nut_h + 0.3 + (tube_id - pocket_d) / 2);
 }
 
 module frame() {
@@ -177,22 +176,36 @@ module frame() {
         if (board) board_stud_cuts();
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
             // keep the webs out of the bore and the nut pocket
-            translate([0, 0, nut_h + 2]) cylinder(d = tube_id, h = plate_z0 - nut_h - 2 - eps);
-            translate([0, 0, -eps]) cylinder(d = pocket_d, h = nut_h + 0.3);
-            translate([0, 0, -eps]) cylinder(d = bushing_d + 2, h = nut_h + 3);
+            // pocket over the nut, then a 45-degree cone up to the bore so the frame prints
+            // plate-down without a flat overhang
+            cone_h = (tube_id - pocket_d) / 2;
+            translate([0, 0, -eps]) cylinder(d = pocket_d, h = nut_h + 0.3 + 2 * eps);
+            translate([0, 0, nut_h + 0.3]) cylinder(d1 = pocket_d, d2 = tube_id, h = cone_h + eps);
+            translate([0, 0, nut_h + 0.3 + cone_h]) cylinder(d = tube_id, h = plate_z0 - nut_h - 0.3 - cone_h - eps);
             servo_body_cut();
             servo_holes();
             // set-screw window, on the servo-body side so the board doesn't block the hex key
             translate([0, servo_dir * tube_od / 2, hubA_z0 + grip_len / 2])
                 cube([window_w, tube_od, window_w * 1.6], center = true);
             // wire / view slot on the board side
-            translate([0, -servo_dir * tube_od / 2, (nut_h + 2 + plate_z0 - (flange_to_horn - plate_t)) / 2])
+            translate([0, -servo_dir * tube_od / 2, (nut_h + 2 + plate_z0) / 2])
                 cube([window_w, tube_od, 10], center = true);
         }
     }
 }
 
-/* ---------- Oldham coupler ---------- */
+// One station cut from the frame (first tube and its servo mount), for checking fits before
+// printing the whole thing: nut pocket, servo holes, coupler clearance, set-screw access.
+module test_station() {
+    intersection() {
+        frame();
+        translate([-pitch / 2, -100, -1]) cube([pitch, 200, flange_z + 2]);
+    }
+}
+
+/* ---------- Oldham coupler ----------
+   The hubs carry the tongues and the middle disc carries the slots, so every piece prints flat
+   without supports (the disc's bottom slot is a short bridge). */
 module key_slot(rot) {
     rotate([0, 0, rot]) translate([0, key_offset, 0]) cube([hub_d + 2, key_w + 2 * fit, 2 * key_h], center = true);
 }
@@ -211,12 +224,12 @@ module pointer(h) {
 }
 
 module hub_pot() {
-    // grips the pot shaft with an M3 set screw; slot along X on top
+    // grips the pot shaft with an M3 set screw; tongue along X on top
+    translate([0, 0, hubA_h - eps]) tongue(0, tongue_h + eps);
     difference() {
         cylinder(d = hub_d, h = hubA_h);
         pointer(hubA_h);
         translate([0, 0, -eps]) cylinder(d = shaft_d + 0.2, h = grip_len + eps);
-        translate([0, 0, hubA_h]) key_slot(0);
         // set screw, radial, with captive nut slot opening at the bottom
         translate([0, 0, grip_len / 2]) rotate([0, 90, 0]) cylinder(d = setscrew, h = hub_d);
         translate([shaft_d / 2 + 2.2, -m3_nut_af / 2, -eps]) cube([2.6, m3_nut_af, grip_len / 2 + m3_nut_af / 2]);
@@ -224,22 +237,23 @@ module hub_pot() {
 }
 
 module disc() {
-    // tongue along X below, along Y above
-    tongue = key_h - 0.2;
-    cylinder(d = hub_d, h = disc_t);
-    translate([0, 0, -tongue]) tongue(0, tongue + eps);
-    translate([0, 0, disc_t - eps]) tongue(90, tongue + eps);
+    // slot along X below, along Y above
+    difference() {
+        cylinder(d = hub_d, h = disc_h);
+        key_slot(0);
+        translate([0, 0, disc_h]) key_slot(90);
+    }
 }
 
 module hub_servo() {
-    // slot along Y underneath; flat top screws to the servo's round horn
+    // tongue along Y underneath; flat top screws to the servo's round horn
+    translate([0, 0, -tongue_h]) tongue(90, tongue_h + eps);
     difference() {
         cylinder(d = hub_d, h = hubB_h);
-        key_slot(90);
-        translate([0, 0, hubB_h - 3]) cylinder(d = horn_cscrew_d, h = 4);   // horn center screw head
+        translate([0, 0, hubB_h - 2.5]) cylinder(d = horn_cscrew_d, h = 4);   // horn center screw head
         for (a = [0, 180]) rotate([0, 0, a]) translate([horn_bc / 2, 0, -1]) {
             cylinder(d = horn_screw, h = hubB_h + 2);
-            cylinder(d = horn_head_d, h = hubB_h - 3.5 + 1);                 // leaves 3.5 mm under the head
+            cylinder(d = horn_head_d, h = hubB_h - 3.5 + 1);                   // leaves 3.5 mm under the head
         }
         // matches the pot hub's pointer when the coupler is assembled
         pointer(hubB_h);
@@ -291,12 +305,18 @@ echo(str("tube OD = ", tube_od, " mm; frame length = ", x_of(n_pots - 1) + tube_
 /* ---------- Output ---------- */
 if (part == "assembly") assembly();
 else if (part == "frame") rotate([180, 0, 0]) translate([0, 0, -flange_z]) frame();  // print plate-down
+else if (part == "test_station") rotate([180, 0, 0]) translate([0, 0, -flange_z]) test_station();
 else if (part == "hub_pot") hub_pot();
 else if (part == "hub_servo") rotate([180, 0, 0]) translate([0, 0, -hubB_h]) hub_servo();
-else if (part == "disc") translate([0, 0, key_h - 0.2]) disc();
+else if (part == "disc") disc();
+else if (part == "coupler_set") {   // one of each, for a fit test
+    hub_pot();
+    translate([hub_d + 4, 0, 0]) disc();
+    translate([2 * (hub_d + 4), 0, 0]) rotate([180, 0, 0]) translate([0, 0, -hubB_h]) hub_servo();
+}
 else if (part == "couplers")
     for (i = [0 : n_pots - 1]) translate([i * (hub_d + 4), 0, 0]) {
         hub_pot();
-        translate([0, hub_d + 4, key_h - 0.2]) disc();
+        translate([0, hub_d + 4, 0]) disc();
         translate([0, 2 * (hub_d + 4), 0]) rotate([180, 0, 0]) translate([0, 0, -hubB_h]) hub_servo();
     }
