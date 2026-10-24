@@ -18,8 +18,10 @@ from pathlib import Path
 from Phidget22.Devices.RCServo import RCServo
 from Phidget22.RCServoVoltage import RCServoVoltage
 
-HUB_PORT = 0           # VINT hub port the RCC1000 is plugged into
-HUB_SERIAL = -1        # -1 = any hub; set it if more than one is attached
+# "RCC1000" (VINT, on a hub port) or "1061" (older PhidgetAdvancedServo 8-Motor, USB).
+CONTROLLER = "RCC1000"
+HUB_PORT = 0           # RCC1000 only: VINT hub port it's plugged into
+SERIAL = -1            # -1 = any; set it if more than one hub/controller is attached
 CHANNELS = {"treble": 0, "mid": 1, "bass": 2, "reverb": 3}
 
 # goBILDA 2000-series in servo mode: 500-2500 us spans 300 degrees.
@@ -43,11 +45,13 @@ def load_cal():
 
 def open_servo(name):
     s = RCServo()
-    s.setDeviceSerialNumber(HUB_SERIAL)
-    s.setHubPort(HUB_PORT)
+    s.setDeviceSerialNumber(SERIAL)
+    if CONTROLLER == "RCC1000":
+        s.setHubPort(HUB_PORT)
     s.setChannel(CHANNELS[name])
     s.openWaitForAttachment(5000)
-    s.setVoltage(RCServoVoltage.RCSERVO_VOLTAGE_6V)
+    if CONTROLLER == "RCC1000":
+        s.setVoltage(RCServoVoltage.RCSERVO_VOLTAGE_6V)  # the 1061 is fixed at 5 V
     s.setMinPulseWidth(SERVO_MIN_US)
     s.setMaxPulseWidth(SERVO_MAX_US)
     s.setMinPosition(0.0)

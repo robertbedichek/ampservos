@@ -17,7 +17,7 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
   (captive nut), which you reach through a window in the tube. The servo hub screws to the
   servo's round horn.
 - **Electronics:** VINT hub → RCC1000 (16-channel RC servo Phidget) set to 6 V servo
-  power, channels 0–3 = treble, mid, bass, reverb.
+  power, or an older 1061 AdvancedServo 8-Motor on USB. Channels 0–3 = treble, mid, bass, reverb.
 - **Software:** `ampservos.py` engages each servo only while it moves, then releases it.
   The pot's friction holds the setting, and the amp never hears PWM chatter or a servo hunting.
 
@@ -34,6 +34,11 @@ Besides the printed frame and couplers. Prices are rough.
 | 1 | VINT / Phidget cable | Hub to RCC1000; usually included, get a longer one if needed | $3 |
 | 1 | USB cable for the hub | | — |
 | 1 | 12 V 2 A DC supply for the RCC1000 | Check the RCC1000 spec page for its input range | $15 |
+
+**Alternative:** an older **PhidgetAdvancedServo 8-Motor (1061)** works in place of the RCC1000,
+hub and cable. Its pulses go to 2.7 ms, so the full 300° is available. Servo power is fixed at
+5 V, which is within the goBILDA's 4.8–7.4 V range. It takes 6–15 V in, so the same 12 V supply
+works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.py`.
 
 ### Servos
 
