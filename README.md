@@ -45,7 +45,6 @@ works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.
 | Qty | Part | Notes | ~Price |
 |---|---|---|---|
 | 4 (+1 spare) | **goBILDA 2000-0025-0002** Dual Mode Servo (25-2 Torque) | 300° in servo mode over 500–2500 µs. **Not** the 5-turn 2000-0025-0502, which spreads ~1800° over the same pulses. Not on Amazon: buy from [goBILDA](https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/), [ServoCity](https://www.servocity.com/2000-series-dual-mode-servo-25-2) or [RobotShop](https://www.robotshop.com/products/servocity-2000-series-dual-mode-servo-25-2-torque). | $37 ea |
-| 4 | Round disc servo horns, **25-tooth spline**, ~24 mm | Horns don't appear to come with the servo; goBILDA sells 25T arms and hubs, so order them with the servos. Set the `horn_*` values to match. | $5 ea |
 | 4 | Servo extension cables, 300 mm | Only if the leads don't reach; route away from the input jack | $2 ea |
 
 ### Hardware
@@ -54,11 +53,15 @@ works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.
 |---|---|---|
 | 4 (+spares) | M3 × 6 cup-point set screws | Pot hub onto the 1/4" shaft |
 | 4 | M3 hex nuts | Captive nut in each pot hub |
-| 16 | M4 × 12 pan-head thread-forming screws for plastic | Servo ears into the plate (3.3 mm pilot) |
 | 8 | M2 × 6 self-tapping screws | Servo horn to the servo-side hub |
-| 4 | M3 horn screws (into the spline's M3 × 0.5 tapped hole) | Horn onto the servo; usually included |
+| 4 | M3 × 20 bolts, M3 nuts | 1061 board to the frame studs (included with the 1061) |
 | — | Thin felt or rubber pads (optional) | Under the tube bottoms to protect the panel |
 | — | Velcro strap or Command strips (optional) | Only if the frame rocks |
+
+Each servo comes with a round disc horn, other arms, the M3 horn screw, and self-tapping
+screws with rubber grommets and brass eyelets for the mounting ears. Use the round horn and the
+self-tapping screws. Leave the grommets out: a rigid mount holds position better.
+(goBILDA's 1906 aluminum hub is 32 mm across and won't fit between 34.7 mm-spaced shafts.)
 
 ### Tools
 
@@ -75,9 +78,14 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 | `pitch` | shaft center-to-center spacing (measured: 1.366" = 34.70 mm) |
 | `nut_af`, `nut_h` | pot nut size across flats, and nut + washer height |
 | `bushing_top`, `shaft_top` | heights above the panel, with the knobs removed |
-| horn dims | from the actual horn (servo dims are from the goBILDA drawing) |
+| `horn_d`, `horn_t`, `horn_bc` | the included round horn: diameter, disc thickness, bolt circle of two opposite holes. If its spline boss sticks out on the side away from the servo, set `horn_hub_d`/`horn_hub_h` too. (Servo dims are from the goBILDA drawing.) |
 
 Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers`).
+
+The 1061 board hangs component-side down, under a shelf on the side away from the servo bodies.
+Its lowest parts sit about 23 mm above the panel, and the shelf reaches about 75 mm from the
+shaft line. Check that there's room for this on your amp. Set `board = false` to leave the shelf off.
+The set-screw windows face the servo-body side.
 
 Print in **PETG or ASA**, not PLA: the top panel of a tube amp gets warm.
 Print the frame plate-down.

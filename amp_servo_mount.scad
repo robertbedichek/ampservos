@@ -25,12 +25,12 @@ servo_W        = 20.0;  // body width
 ear_hole_dx    = 10.0;  // ear hole spacing across body width
 ear_hole_dy    = 48.0;  // ear hole spacing along body length (goBILDA drawing)
 ear_span       = 54.3;  // flange length, tip to tip
-screw_pilot    = 3.3;   // M4 thread-forming into plastic (or 4.0 for heat-set M3 insert)
+screw_pilot    = 2.5;   // for the self-tapping screws that come with the servo (skip the rubber grommets)
 spline_offset  = 10.0;  // output axis distance from body center, along length
 flange_to_horn = 10.2;  // spline-side face of ears to spline tip (goBILDA drawing; 2.6 ear, 4.1 spline)
 servo_dir      = -1;    // +1 / -1: which way the servo bodies extend in Y (away from handle)
 
-/* ---------- Servo horn (round disc horn) ---------- */
+/* ---------- Servo horn: the round disc horn included with the servo ---------- */
 horn_d     = 24.0;   // MEASURE
 horn_t     = 2.5;    // MEASURE: disc thickness
 horn_hub_d = 9.0;    // raised hub around spline on the coupler side, if any
@@ -56,6 +56,20 @@ tube_id   = max(horn_d, hub_d) + 2 * clear;
 tube_od   = tube_id + 2 * wall;
 pocket_d  = nut_af / cos(30) + 0.6;   // round, so nut orientation doesn't matter
 window_w  = 12;      // set-screw access window
+
+/* ---------- Phidgets 1061 board, hung under a shelf on the side away from the servo bodies ---------- */
+board            = true;
+board_L          = 58.4;   // 2.300"
+board_W          = 48.3;   // 1.900"
+board_hole_dx    = 50.8;   // 2.000"
+board_hole_dy    = 40.6;   // 1.600"
+board_parts_h    = 11.5;   // 0.453" tallest component, which hangs downward
+stud_h           = 5.0;    // same as the 5 mm spacers supplied with the board
+stud_d           = 7.0;
+board_bolt       = 3.4;    // M3 clearance: supplied M3 x 20 bolt up through board, stud and shelf
+board_nut_af     = 5.7;    // M3 nut, in a recess on the top of the shelf
+board_nut_h      = 2.6;
+board_gap        = 3.0;    // board edge clearance from the main plate edge
 
 $fn = 72;
 eps = 0.01;
@@ -93,12 +107,41 @@ module servo_body_cut() {
         cube([servo_W + 1, servo_L + 1, flange_to_horn + 2]);
 }
 
+// Plate edge on the side away from the servo bodies, as a distance from the pot axes.
+function plate_near_edge() = max(ear_span / 2 - spline_offset, tube_od / 2) + 3;
+function frame_cx() = x_of(n_pots - 1) / 2;
+// center of the board, in the same coordinates
+function board_cy() = -servo_dir * (plate_near_edge() + board_gap + board_W / 2);
+
 module plate_outline() {
     c = servo_dir * spline_offset;
     y0 = min(c - ear_span / 2, -tube_od / 2) - 3;
     y1 = max(c + ear_span / 2,  tube_od / 2) + 3;
     translate([-tube_od / 2 - 2, y0, plate_z0])
         cube([x_of(n_pots - 1) + tube_od + 4, y1 - y0, plate_t]);
+    if (board) {
+        // shelf carrying the board
+        w = board_L + 8;
+        d = plate_near_edge() + board_gap + board_W + 4;
+        translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, plate_z0]) cube([w, d, plate_t]);
+    }
+}
+
+module board_holes(d, h, z0) {
+    for (sx = [-1, 1], sy = [-1, 1])
+        translate([frame_cx() + sx * board_hole_dx / 2, board_cy() + sy * board_hole_dy / 2, z0])
+            cylinder(d = d, h = h);
+}
+
+module board_studs() {
+    board_holes(stud_d, stud_h + eps, plate_z0 - stud_h);
+}
+
+module board_stud_cuts() {
+    board_holes(board_bolt, stud_h + plate_t + 2, plate_z0 - stud_h - 1);
+    for (sx = [-1, 1], sy = [-1, 1])
+        translate([frame_cx() + sx * board_hole_dx / 2, board_cy() + sy * board_hole_dy / 2, flange_z - board_nut_h])
+            cylinder(d = board_nut_af / cos(30), h = board_nut_h + 1, $fn = 6);
 }
 
 module tube(i) {
@@ -121,11 +164,13 @@ module frame() {
     difference() {
         union() {
             plate_outline();
+            if (board) board_studs();
             for (i = [0 : n_pots - 1]) { tube(i); nut_seat(i); }
             // webs tying neighboring tubes together low down, for stiffness
             for (i = [0 : n_pots - 2])
                 translate([x_of(i), -wall, 0]) cube([pitch, 2 * wall, plate_z0]);
         }
+        if (board) board_stud_cuts();
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
             // keep the webs out of the bore and the nut pocket
             translate([0, 0, nut_h + 2]) cylinder(d = tube_id, h = plate_z0 - nut_h - 2 - eps);
@@ -133,11 +178,11 @@ module frame() {
             translate([0, 0, -eps]) cylinder(d = bushing_d + 2, h = nut_h + 3);
             servo_body_cut();
             servo_holes();
-            // set-screw window, facing the open side of the tube
-            translate([0, -servo_dir * tube_od / 2, hubA_z0 + grip_len / 2])
+            // set-screw window, on the servo-body side so the board doesn't block the hex key
+            translate([0, servo_dir * tube_od / 2, hubA_z0 + grip_len / 2])
                 cube([window_w, tube_od, window_w * 1.6], center = true);
-            // wire / view slot on the other side
-            translate([0, servo_dir * tube_od / 2, (nut_h + 2 + plate_z0 - (flange_to_horn - plate_t)) / 2])
+            // wire / view slot on the board side
+            translate([0, -servo_dir * tube_od / 2, (nut_h + 2 + plate_z0 - (flange_to_horn - plate_t)) / 2])
                 cube([window_w, tube_od, 10], center = true);
         }
     }
@@ -191,8 +236,16 @@ module ghost_servo(i) {
     }
 }
 
+module ghost_board() {
+    z = plate_z0 - stud_h - 1.6;
+    color("darkgreen") translate([frame_cx() - board_L / 2, board_cy() - board_W / 2, z]) cube([board_L, board_W, 1.6]);
+    color("dimgray", 0.6) translate([frame_cx() - board_L / 2 + 4, board_cy() - board_W / 2 + 4, z - board_parts_h])
+        cube([board_L - 8, board_W - 8, board_parts_h]);
+}
+
 module assembly() {
     color("orange", 0.85) frame();
+    if (board) ghost_board();
     for (i = [0 : n_pots - 1]) {
         ghost_servo(i);
         translate([x_of(i), 0, 0]) {
@@ -209,6 +262,9 @@ module assembly() {
 }
 
 echo(str("plate underside at z = ", plate_z0, " mm; servo ears at z = ", flange_z, " mm above panel"));
+if (board) echo(str("1061 board hangs component-side down; its lowest parts are ",
+    plate_z0 - stud_h - 1.6 - board_parts_h, " mm above the panel, and it reaches ",
+    abs(board_cy()) + board_W / 2, " mm from the pot axes"));
 echo(str("tube OD = ", tube_od, " mm; frame length = ", x_of(n_pots - 1) + tube_od + 4, " mm"));
 
 /* ---------- Output ---------- */
