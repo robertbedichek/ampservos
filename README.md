@@ -15,7 +15,7 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
 - **Couplers** (`part="couplers"`): 3-piece Oldham couplers, so the servo and the pot don't
   have to line up perfectly. The pot hub grips the 1/4" shaft with an M3 set screw
   (captive nut), which you reach through a window in the tube. The servo hub screws to the
-  servo's round horn.
+  20 mm aluminum disc horn on the servo.
 - **Electronics:** VINT hub → RCC1000 (16-channel RC servo Phidget) set to 6 V servo
   power, or an older 1061 AdvancedServo 8-Motor on USB. Channels 0–3 = treble, mid, bass, reverb.
 - **Software:** `ampservos.py` engages each servo only while it moves, then releases it.
@@ -53,14 +53,15 @@ works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.
 |---|---|---|
 | 4 (+spares) | M3 × 6 cup-point set screws | Pot hub onto the 1/4" shaft |
 | 4 | M3 hex nuts | Captive nut in each pot hub |
-| 8 | M2 × 6 self-tapping screws | Servo horn to the servo-side hub |
+| 4 (+1) | 19.8 mm aluminum 25T disc servo horns, 4 × M3 tapped holes on a 14 mm circle | Instead of the servo's plastic horn; the model is sized for this one (2.45 mm disc, 9 mm boss, 4.5 mm overall) |
+| 8 | M3 × 6 button-head screws | Coupler hub up into the horn's tapped holes |
 | 4 | M3 × 20 bolts, M3 nuts | 1061 board to the frame studs (included with the 1061) |
 | — | Thin felt or rubber pads (optional) | Under the tube bottoms to protect the panel |
 | — | Velcro strap or Command strips (optional) | Only if the frame rocks |
 
 Each servo comes with a round disc horn, other arms, the M3 horn screw, and self-tapping
-screws with rubber grommets and brass eyelets for the mounting ears. Use the round horn and the
-self-tapping screws. Leave the grommets out: a rigid mount holds position better.
+screws with rubber grommets and brass eyelets for the mounting ears. Use the self-tapping screws
+(the model uses a 20 mm aluminum horn rather than the included plastic one). Leave the grommets out: a rigid mount holds position better.
 (goBILDA's 1906 aluminum hub is 32 mm across and won't fit between 34.7 mm-spaced shafts.)
 
 ### Tools
@@ -78,7 +79,7 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 | `pitch` | shaft center-to-center spacing (measured: 1.366" = 34.70 mm) |
 | `nut_af`, `nut_h` | pot nut size across flats, and nut + washer height |
 | `bushing_top`, `shaft_top` | heights above the panel, with the knobs removed |
-| `horn_d`, `horn_t`, `horn_bc` | the included round horn: diameter, disc thickness, bolt circle of two opposite holes. If its spline boss sticks out on the side away from the servo, set `horn_hub_d`/`horn_hub_h` too. (Servo dims are from the goBILDA drawing.) |
+| `horn_*` | set for a 19.8 mm aluminum 25T horn (14 mm M3 hole circle). Change them if you use a different horn. (Servo dims are from the goBILDA drawing.) |
 
 Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers`).
 

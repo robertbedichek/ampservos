@@ -28,18 +28,20 @@ ear_span       = 54.3;  // flange length, tip to tip
 screw_pilot    = 2.5;   // for the self-tapping screws that come with the servo (skip the rubber grommets)
 spline_offset  = 10.0;  // output axis distance from body center, along length
 flange_to_horn = 10.2;  // spline-side face of ears to spline tip (goBILDA drawing; 2.6 ear, 4.1 spline)
+spline_h       = 4.1;
 servo_dir      = -1;    // +1 / -1: which way the servo bodies extend in Y (away from handle)
 
-/* ---------- Servo horn: the round disc horn included with the servo ---------- */
-horn_d     = 24.0;   // MEASURE
-horn_t     = 2.5;    // MEASURE: disc thickness
-horn_hub_d = 9.0;    // raised hub around spline on the coupler side, if any
-horn_hub_h = 0.0;
-horn_bc    = 14.0;   // MEASURE: bolt circle of the two horn holes used
-horn_screw = 1.8;    // pilot for M2 self-tappers through the horn
+/* ---------- Servo horn: 19.8 mm aluminum 25T disc, boss toward the servo, 4 x M3 tapped ---------- */
+horn_d      = 19.8;
+horn_t      = 2.45;  // disc thickness
+horn_h      = 4.5;   // overall, disc + 9 mm spline boss
+horn_bc     = 14.0;  // tapped-hole circle; the coupler uses two opposite holes
+horn_screw  = 3.4;   // M3 x 6 button head, from below, into the horn's threads
+horn_head_d = 6.2;   // counterbore for the M3 button heads
+horn_cscrew_d = 6.5; // recess for the head of the horn's center screw
 
 /* ---------- Coupler ---------- */
-hub_d     = 18.0;
+hub_d     = 22.0;     // room for M3 button-head counterbores on the 14 mm horn bolt circle
 grip_len  = 10.0;    // depth of shaft bore
 key_w     = 6.0;     // Oldham slot width
 key_h     = 3.0;     // Oldham slot depth
@@ -79,10 +81,10 @@ hubA_h   = grip_len + 2 + key_h;
 hubA_z0  = shaft_top - grip_len;
 disc_t   = 3.0;
 disc_h   = disc_t + 2 * (key_h - 0.2);
-hubB_h   = key_h + 3.0;
+hubB_h   = key_h + 4.5;
 hubB_z0  = hubA_z0 + hubA_h + gap + disc_t + gap;
 horn_z0  = hubB_z0 + hubB_h;
-flange_z = horn_z0 + horn_t + horn_hub_h + flange_to_horn;
+flange_z = horn_z0 + horn_h + flange_to_horn - spline_h;  // horn bottoms out at the spline root
 plate_z0 = flange_z - plate_t;
 
 assert(hubA_z0 > bushing_top + 0.5, "shaft too short: hub would hit bushing; reduce grip_len");
@@ -218,8 +220,11 @@ module hub_servo() {
     difference() {
         cylinder(d = hub_d, h = hubB_h);
         key_slot(90);
-        if (horn_hub_h > 0) translate([0, 0, hubB_h - horn_hub_h]) cylinder(d = horn_hub_d + 0.6, h = horn_hub_h + 1);
-        for (a = [0, 180]) rotate([0, 0, a]) translate([horn_bc / 2, 0, key_h]) cylinder(d = horn_screw, h = hubB_h);
+        translate([0, 0, hubB_h - 3]) cylinder(d = horn_cscrew_d, h = 4);   // horn center screw head
+        for (a = [0, 180]) rotate([0, 0, a]) translate([horn_bc / 2, 0, -1]) {
+            cylinder(d = horn_screw, h = hubB_h + 2);
+            cylinder(d = horn_head_d, h = hubB_h - 3.5 + 1);                 // leaves 3.5 mm under the head
+        }
         // indicator notch so knob position is visible through the window
         translate([hub_d / 2, 0, hubB_h / 2]) cube([2, 1.5, hubB_h + 1], center = true);
     }
@@ -232,7 +237,7 @@ module ghost_servo(i) {
         translate([-servo_W / 2, c - servo_L / 2, flange_z - (flange_to_horn - 4)]) cube([servo_W, servo_L, 38]);
         translate([-servo_W / 2 + 4, c - ear_span / 2, flange_z]) cube([servo_W - 8, ear_span, 2.5]);
         translate([0, 0, horn_z0]) cylinder(d = horn_d, h = horn_t);
-        translate([0, 0, horn_z0 + horn_t]) cylinder(d = 6, h = flange_to_horn);
+        translate([0, 0, horn_z0 + horn_t]) cylinder(d = 9, h = horn_h - horn_t);
     }
 }
 
