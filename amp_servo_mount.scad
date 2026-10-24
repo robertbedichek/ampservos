@@ -113,7 +113,7 @@ module nut_seat(i) {
     translate([x_of(i), 0, 0]) difference() {
         cylinder(d = tube_od, h = nut_h + 2);
         translate([0, 0, -eps]) cylinder(d = pocket_d, h = nut_h + 0.3);
-        translate([0, 0, -eps]) cylinder(d = max(bushing_d + 1, tube_id - 4), h = 20);
+        translate([0, 0, -eps]) cylinder(d = bushing_d + 2, h = 20);
     }
 }
 
@@ -127,7 +127,10 @@ module frame() {
                 translate([x_of(i), -wall, 0]) cube([pitch, 2 * wall, plate_z0]);
         }
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
-            cylinder(d = tube_id, h = plate_z0 - eps);          // keep bores clear of webs
+            // keep the webs out of the bore and the nut pocket
+            translate([0, 0, nut_h + 2]) cylinder(d = tube_id, h = plate_z0 - nut_h - 2 - eps);
+            translate([0, 0, -eps]) cylinder(d = pocket_d, h = nut_h + 0.3);
+            translate([0, 0, -eps]) cylinder(d = bushing_d + 2, h = nut_h + 3);
             servo_body_cut();
             servo_holes();
             // set-screw window, facing the open side of the tube
