@@ -97,11 +97,30 @@ Print the frame plate-down.
 pip install -r requirements.txt
 ./ampservos.py --calibrate treble     # repeat for each channel; writes calibration.json
 ./ampservos.py treble=6 mid=4.5 bass=7 reverb=2
+./ampservos.py --park                # all knobs to 5, before lifting the frame off
 ```
 
 Calibrate before anything else. These servos have far more torque than the pots
 need, and driving a servo into a pot's end stop will stall the servo or strip the pot.
 Record knob 0 and knob 10 a few degrees inside each stop.
+
+## Removing and refitting
+
+The frame is held on by gravity and the nut pockets, and the couplers separate by lifting.
+
+1. `./ampservos.py --park`: all knobs go to 5.
+2. Unplug USB and power, then lift the frame straight up. The servo-side hubs stay on the horns.
+   Take the loose middle discs off. The pot hubs stay on the shafts and work as small knobs, and
+   the groove on each one points like the original knob did.
+3. To refit, turn each pot hub's pointer to 5, drop the discs on, and lower the frame. Wiggle a pot hub
+   slightly if a disc doesn't drop into place.
+
+The Oldham tongues are off-center, so each joint goes together only one way round. The coupler can't
+end up a half-turn out, which would send a servo into the pot's end stop. Calibration still holds
+after refitting, as long as the set screws and horns haven't been disturbed.
+
+When fitting a pot hub the first time, turn the pot fully counterclockwise and set the hub's pointer
+where the chickenhead pointed at 0.
 
 ## Notes
 

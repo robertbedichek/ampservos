@@ -43,7 +43,9 @@ horn_cscrew_d = 6.5; // recess for the head of the horn's center screw
 /* ---------- Coupler ---------- */
 hub_d     = 22.0;     // room for M3 button-head counterbores on the 14 mm horn bolt circle
 grip_len  = 10.0;    // depth of shaft bore
-key_w     = 6.0;     // Oldham slot width
+key_w     = 4.0;     // Oldham tongue width
+key_offset = 1.2;    // tongues sit off-center so each joint only goes together one way round
+                     // (kept small enough that the slot clears the horn-screw counterbores)
 key_h     = 3.0;     // Oldham slot depth
 fit       = 0.25;    // clearance per side on Oldham keys
 gap       = 0.4;     // axial gap between coupler pieces
@@ -192,13 +194,27 @@ module frame() {
 
 /* ---------- Oldham coupler ---------- */
 module key_slot(rot) {
-    rotate([0, 0, rot]) cube([hub_d + 2, key_w + 2 * fit, 2 * key_h], center = true);
+    rotate([0, 0, rot]) translate([0, key_offset, 0]) cube([hub_d + 2, key_w + 2 * fit, 2 * key_h], center = true);
+}
+
+module tongue(rot, h) {
+    intersection() {
+        cylinder(d = hub_d, h = h);
+        rotate([0, 0, rot]) translate([-hub_d / 2, key_offset - key_w / 2, 0]) cube([hub_d, key_w, h]);
+    }
+}
+
+// Groove down the side and across the top rim, on the +Y side. On the pot hub it is the knob's
+// pointer: when fitting the hub, point it where the chickenhead pointed.
+module pointer(h) {
+    translate([0, hub_d / 2, h / 2]) cube([1.2, 1.6, h + 2], center = true);
 }
 
 module hub_pot() {
     // grips the pot shaft with an M3 set screw; slot along X on top
     difference() {
         cylinder(d = hub_d, h = hubA_h);
+        pointer(hubA_h);
         translate([0, 0, -eps]) cylinder(d = shaft_d + 0.2, h = grip_len + eps);
         translate([0, 0, hubA_h]) key_slot(0);
         // set screw, radial, with captive nut slot opening at the bottom
@@ -211,8 +227,8 @@ module disc() {
     // tongue along X below, along Y above
     tongue = key_h - 0.2;
     cylinder(d = hub_d, h = disc_t);
-    translate([0, 0, -tongue / 2]) cube([hub_d, key_w, tongue + eps], center = true);
-    translate([0, 0, disc_t + tongue / 2]) rotate([0, 0, 90]) cube([hub_d, key_w, tongue + eps], center = true);
+    translate([0, 0, -tongue]) tongue(0, tongue + eps);
+    translate([0, 0, disc_t - eps]) tongue(90, tongue + eps);
 }
 
 module hub_servo() {
@@ -225,8 +241,8 @@ module hub_servo() {
             cylinder(d = horn_screw, h = hubB_h + 2);
             cylinder(d = horn_head_d, h = hubB_h - 3.5 + 1);                 // leaves 3.5 mm under the head
         }
-        // indicator notch so knob position is visible through the window
-        translate([hub_d / 2, 0, hubB_h / 2]) cube([2, 1.5, hubB_h + 1], center = true);
+        // matches the pot hub's pointer when the coupler is assembled
+        pointer(hubB_h);
     }
 }
 

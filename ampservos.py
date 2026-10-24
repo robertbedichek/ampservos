@@ -4,6 +4,7 @@
 Usage:
     ampservos.py treble=6 mid=4.5 bass=7 reverb=2   # set knobs on a 0-10 scale
     ampservos.py --calibrate treble                  # jog one channel to find its end stops
+    ampservos.py --park                              # all knobs to 5, before lifting the frame off
 
 Positions are on the knob's 0-10 scale. Each servo is engaged only while it
 moves, then released: the pot's own friction holds the setting, and the amp
@@ -34,6 +35,7 @@ SERVO_RANGE_DEG = 300.0
 CAL_FILE = Path(__file__).with_name("calibration.json")
 DEFAULT_CAL = {name: [600, 2400] for name in CHANNELS}
 
+PARK = 5.0             # knob setting for --park; turn the bare pot hubs here before refitting
 VELOCITY_DEG_S = 90.0  # slow enough to sound like a hand turning the knob
 
 
@@ -126,10 +128,14 @@ def calibrate(name):
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--calibrate", choices=CHANNELS)
+    ap.add_argument("--park", action="store_true", help=f"move every knob to {PARK:g}")
     ap.add_argument("settings", nargs="*", help="name=value, value 0-10")
     args = ap.parse_args()
     if args.calibrate:
         calibrate(args.calibrate)
+        return
+    if args.park:
+        set_knobs({name: PARK for name in CHANNELS})
         return
     settings = {}
     for item in args.settings:
