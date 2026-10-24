@@ -21,6 +21,46 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
 - **Software:** `ampservos.py` engages each servo only while it moves, then releases it.
   The pot's friction holds the setting, and the amp never hears PWM chatter or a servo hunting.
 
+## Parts list
+
+Besides the printed frame and couplers. Prices are rough.
+
+### Electronics (Phidgets)
+
+| Qty | Part | Notes | ~Price |
+|---|---|---|---|
+| 1 | **RCC1000** 16× RC Servo Phidget | Drives all four servos on channels 0–3 | $30 |
+| 1 | **HUB0000** VINT Hub Phidget (USB) | Or HUB5000 for network; skip if you have a free VINT port | $30 |
+| 1 | VINT / Phidget cable | Hub to RCC1000; usually included, get a longer one if needed | $3 |
+| 1 | USB cable for the hub | | — |
+| 1 | 12 V 2 A DC supply for the RCC1000 | Check the RCC1000 spec page for its input range | $15 |
+
+### Servos
+
+| Qty | Part | Notes | ~Price |
+|---|---|---|---|
+| 4 (+1 spare) | **goBILDA 2000-0025-0002** Dual Mode Servo (25-2 Torque) | 300° in servo mode over 500–2500 µs. **Not** the 5-turn 2000-0025-0502, which spreads ~1800° over the same pulses. | $35–50 ea |
+| 4 | Round disc servo horns, **25-tooth spline**, ~24 mm | If not included with the servo; set the `horn_*` values to match | $5 ea |
+| 4 | Servo extension cables, 300 mm | Only if the leads don't reach; route away from the input jack | $2 ea |
+
+### Hardware
+
+| Qty | Part | Used for |
+|---|---|---|
+| 4 (+spares) | M3 × 6 cup-point set screws | Pot hub onto the 1/4" shaft |
+| 4 | M3 hex nuts | Captive nut in each pot hub |
+| 16 | M4 × 12 pan-head thread-forming screws for plastic | Servo ears into the plate (3.3 mm pilot) |
+| 8 | M2 × 6 self-tapping screws | Servo horn to the servo-side hub |
+| 4 | M3 horn screws (into the spline's M3 × 0.5 tapped hole) | Horn onto the servo; usually included |
+| — | Thin felt or rubber pads (optional) | Under the tube bottoms to protect the panel |
+| — | Velcro strap or Command strips (optional) | Only if the frame rocks |
+
+### Tools
+
+Calipers, 1.5 mm hex key (M3 set screws), small screwdriver.
+
+**Rough total:** $260–330.
+
 ## Before printing: measure these
 
 Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
@@ -30,7 +70,7 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 | `pitch` | shaft center-to-center spacing (most important) |
 | `nut_af`, `nut_h` | pot nut size across flats, and nut + washer height |
 | `bushing_top`, `shaft_top` | heights above the panel, with the knobs removed |
-| `flange_to_horn`, horn dims | from the actual servo and horn |
+| horn dims | from the actual horn (servo dims are from the goBILDA drawing) |
 
 Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers`).
 

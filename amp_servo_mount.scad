@@ -23,11 +23,11 @@ shaft_top   = 20.0;   // MEASURE: shaft tip above panel (knob removed)
 servo_L        = 40.0;  // body length
 servo_W        = 20.0;  // body width
 ear_hole_dx    = 10.0;  // ear hole spacing across body width
-ear_hole_dy    = 49.5;  // ear hole spacing along body length
-ear_span       = 55.0;  // flange length, tip to tip
+ear_hole_dy    = 48.0;  // ear hole spacing along body length (goBILDA drawing)
+ear_span       = 54.3;  // flange length, tip to tip
 screw_pilot    = 3.3;   // M4 thread-forming into plastic (or 4.0 for heat-set M3 insert)
 spline_offset  = 10.0;  // output axis distance from body center, along length
-flange_to_horn = 13.0;  // MEASURE: underside of ears to face of spline (where horn seats)
+flange_to_horn = 10.2;  // spline-side face of ears to spline tip (goBILDA drawing; 2.6 ear, 4.1 spline)
 servo_dir      = -1;    // +1 / -1: which way the servo bodies extend in Y (away from handle)
 
 /* ---------- Servo horn (round disc horn) ---------- */
