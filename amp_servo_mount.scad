@@ -53,8 +53,7 @@ setscrew  = 2.9;     // M3 set screw clearance hole (thread-forming) ...
 m3_nut_af = 5.7;     // ... with a captive nut slot
 
 /* ---------- Frame ---------- */
-floor_t   = 1.2;     // floor under the servo pocket, so the tube walls don't start in midair when printing
-plate_t   = flange_to_horn - spline_h + 0.4 + floor_t;  // pocket swallows the servo case below the ears
+plate_t   = flange_to_horn - spline_h + 1.6;  // deeper than the servo case below the ears
 wall      = 2.5;
 clear     = 1.0;     // radial clearance around rotating parts
 tube_id   = max(horn_d, hub_d) + 2 * clear;
@@ -108,10 +107,15 @@ module servo_holes() {
 
 module servo_body_cut() {
     c = servo_dir * spline_offset;
-    // the case below the ears sits in a pocket in the plate; the horn turns in a hole through its floor
-    translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 + floor_t])
-        cube([servo_W + 1, servo_L + 1, plate_t]);
-    translate([0, 0, plate_z0 - 1]) cylinder(d = tube_id, h = floor_t + 2);
+    // The servo case and the coupler hub both pass straight through the plate, so a servo with its
+    // horn and hub already screwed on drops in from above.
+    translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 - 1])
+        cube([servo_W + 1, servo_L + 1, plate_t + 2]);
+    translate([0, 0, plate_z0 - 1]) cylinder(d = tube_id, h = plate_t + 2);
+    // Where that opening undercuts the tube wall, a 45-degree gable lets the wall grow in from the
+    // sides when printed plate-down, instead of starting on a flat bridge.
+    g = (servo_W + 1) / sqrt(2);
+    translate([0, c, plate_z0]) rotate([0, 45, 0]) cube([g, servo_L + 1, g], center = true);
 }
 
 // Plate edge on the side away from the servo bodies, as a distance from the pot axes.

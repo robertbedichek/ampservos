@@ -95,8 +95,11 @@ The set-screw windows face the servo-body side.
 Slice with the MK3S PETG settings in `slicer/petg_mk3s.ini` (0.20 mm QUALITY, Prusament PETG,
 4 perimeters, 40% infill, no supports):
 `PrusaSlicer --export-gcode --load slicer/petg_mk3s.ini stl/frame.stl --output gcode/ampservo-frame_PETG.gcode`.
-About 10 h for the frame and 4 h for the four coupler sets. PrusaSlicer warns about bridging on the
-servo-pocket floors (21 mm spans), which is expected.
+About 9.5 h for the frame and 4 h for the four coupler sets. Each servo opening goes straight through
+the plate, and where it undercuts a tube wall the wall is held up by a 45° gable, so there are no long
+bridges. PrusaSlicer may still print a generic "floating bridge anchors" note, from the short window
+bridges; supports aren't needed. Because the opening is open, a servo can go in from above
+with its horn and coupler hub already screwed on.
 
 Print in **PETG or ASA**, not PLA: the top panel of a tube amp gets warm.
 Print the frame plate-down.
