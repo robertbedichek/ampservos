@@ -30,7 +30,7 @@ spline_offset  = 10.0;  // output axis distance from body center, along length
 flange_to_horn = 10.2;  // spline-side face of ears to spline tip (goBILDA drawing; 2.6 ear, 4.1 spline)
 spline_h       = 4.1;
 servo_dir      = -1;    // +1 / -1: which way the servo bodies extend in Y (away from handle)
-ear_rib_w      = 2.5;   // triangular gusset on the spline side of each ear, between its two slots,
+ear_rib_w      = 1.0;   // gusset on the spline side of each ear, between its two slots,
 ear_rib_h      = 1.5;   // standing this far above the 2.7 mm ear
 
 /* ---------- Servo horn: 19.8 mm aluminum 25T disc, boss toward the servo, 4 x M3 tapped ---------- */
@@ -116,8 +116,8 @@ module servo_body_cut() {
     translate([0, 0, plate_z0 - 1]) cylinder(d = tube_id, h = plate_t + 2);
     // grooves in the top face for the gussets under the ears
     for (sy = [-1, 1])
-        translate([-(ear_rib_w + 1.5) / 2, c + (sy < 0 ? -ear_span / 2 - 1 : servo_L / 2), flange_z - ear_rib_h - 0.6])
-            cube([ear_rib_w + 1.5, (ear_span - servo_L) / 2 + 1, ear_rib_h + 1]);
+        translate([-(ear_rib_w + 0.5) / 2, c + (sy < 0 ? -ear_span / 2 - 1 : servo_L / 2), flange_z - ear_rib_h - 0.6])
+            cube([ear_rib_w + 0.5, (ear_span - servo_L) / 2 + 1, ear_rib_h + 1]);
     // Where that opening undercuts the tube wall, the wall is cut back with a short 45-degree flare
     // down to the set-screw slot, so it prints plate-down without starting in midair.
     f = (servo_W + 1 - window_w) / 2;
@@ -176,6 +176,13 @@ module nut_seat(i) {
     translate([x_of(i), 0, 0]) cylinder(d = tube_od, h = nut_h + 0.3 + (tube_id - pocket_d) / 2);
 }
 
+// Slot through the tube wall on the +Y (side = 1) or -Y side, from z0 to z1, with a 45-degree
+// pointed end below z0 so its panel-side end prints plate-down without a flat bridge.
+module slot(side, z0, z1) {
+    translate([-window_w / 2, side < 0 ? -tube_od : 0, z0]) cube([window_w, tube_od, z1 - z0]);
+    translate([0, side * tube_od / 2, z0]) rotate([0, 45, 0]) cube([window_w / sqrt(2), tube_od, window_w / sqrt(2)], center = true);
+}
+
 module frame() {
     difference() {
         union() {
@@ -199,11 +206,10 @@ module frame() {
             servo_holes();
             // set-screw slot, on the servo-body side so the board doesn't block the hex key; it runs
             // up into the servo opening, which leaves the coupler and horn screws in view
-            ws = hubA_z0 + grip_len / 2 - window_w * 0.8;
-            translate([-window_w / 2, servo_dir < 0 ? -tube_od : 0, ws]) cube([window_w, tube_od, plate_z0 - ws + eps]);
+            ws = hubA_z0 + grip_len / 2 - window_w * 0.8 + window_w / 2;
+            slot(servo_dir, ws, plate_z0 + eps);
             // wire / view slot on the board side
-            translate([0, -servo_dir * tube_od / 2, (nut_h + 2 + plate_z0) / 2])
-                cube([window_w, tube_od, 10], center = true);
+            slot(-servo_dir, (nut_h + 2 + plate_z0) / 2 - 5, (nut_h + 2 + plate_z0) / 2 + 5);
         }
     }
 }
