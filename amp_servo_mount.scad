@@ -14,7 +14,9 @@ part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "
 /* ---------- Amp ---------- */
 n_pots      = 4;
 pitch       = 34.70;  // measured: 1.366" center-to-center (1.616" outside-to-outside minus 1/4")
-nut_af      = 12.7;   // MEASURE: pot nut across flats (1/2" typical for 3/8"-32 bushings)
+nut_af      = 12.45;  // measured: pot nut across flats
+washer_d    = 16.0;   // measured: thin flat washer under the nut
+washer_t    = 0.8;    // thin; the collar's recess allows for up to washer_t + 0.4
 nut_h       = 3.5;    // MEASURE: nut + washer height above the panel
 bushing_d   = 9.6;    // 3/8" threaded bushing
 bushing_top = 7.0;    // MEASURE: bushing top above panel
@@ -78,7 +80,7 @@ chamfer   = 1;       // on the plate's outside edges, both faces
 collar_fit = 0.3;                        // radial clearance in the tube bore
 collar_od  = tube_id - 2 * collar_fit;
 collar_h   = nut_h + 2.5;                // socket over the nut and washer, then a lip on top of the nut
-collar_af  = nut_af + 0.3;               // hex socket, snug on the nut so the collar can't turn
+collar_af  = 13.0;                       // hex socket: 13.0 fit-tested snug on the 12.45 mm nut, so the collar can't turn
 
 /* ---------- Phidgets 1061 board, hung under a shelf on the side away from the servo bodies ---------- */
 board            = true;
@@ -245,6 +247,7 @@ module collar() {
             cylinder(d = collar_od, h = collar_h - 1);   // lead-in for the tube
         }
         translate([0, 0, -eps]) cylinder(d = collar_af / cos(30), h = nut_h + 0.2 + eps, $fn = 6);
+        translate([0, 0, -eps]) cylinder(d = washer_d + 0.8, h = washer_t + 0.4 + eps);   // washer under the nut
         cylinder(d = bushing_d + 1, h = collar_h + 1);
     }
 }
@@ -407,6 +410,7 @@ module assembly() {
         }
     }
     color("silver") for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
+        cylinder(d = washer_d, h = washer_t);
         cylinder(d = nut_af / cos(30), h = nut_h, $fn = 6);
         cylinder(d = bushing_d, h = bushing_top);
         color("tomato") collar();
