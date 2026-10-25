@@ -7,7 +7,7 @@
 // Units: mm. Z = 0 is the control-panel surface; X runs along the row of knobs.
 // Values marked MEASURE must be checked with calipers before printing.
 
-part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers"
+part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers" | "insert_test"
 
 /* ---------- Amp ---------- */
 n_pots      = 4;
@@ -25,7 +25,7 @@ servo_W        = 20.0;  // body width
 ear_hole_dx    = 10.0;  // ear hole spacing across body width
 ear_hole_dy    = 48.0;  // ear hole spacing along body length (goBILDA drawing)
 ear_span       = 54.3;  // flange length, tip to tip
-screw_pilot    = 2.5;   // for the self-tapping screws that come with the servo (skip the rubber grommets)
+pocket_L       = 40.5;  // opening for the case below the ears (39.7 mm on the goBILDA drawing)
 spline_offset  = 10.0;  // output axis distance from body center, along length
 flange_to_horn = 10.2;  // spline-side face of ears to spline tip (goBILDA drawing; 2.6 ear, 4.1 spline)
 spline_h       = 4.1;
@@ -51,8 +51,15 @@ key_offset = 1.2;    // tongues sit off-center so each joint only goes together 
 key_h     = 3.0;     // Oldham slot depth
 fit       = 0.25;    // clearance per side on Oldham keys
 gap       = 0.4;     // axial gap between coupler pieces
-setscrew  = 2.9;     // M3 set screw clearance hole (thread-forming) ...
-m3_nut_af = 5.7;     // ... with a captive nut slot
+setscrew_seat = 1.5; // the hub's set-screw insert sits this far below the surface, so an M3 x 6 set screw
+                     // reaches the shaft without sticking out into the tube clearance
+
+/* ---------- Heat-set inserts (M3) ---------- */
+insert_d   = 4.0;    // hole for the kit's M3 brass inserts (4.2 mm over the knurls): set from part="insert_test"
+m3_clear   = 3.4;
+ear_insert = 4;      // M3 x 4 inserts in the top face for the servo ears (M3 x 8 bolts and washers)
+board_insert = 5;    // M3 x 5 inserts in the board studs (M3 x 8 bolts up through the board)
+hub_insert = 4;      // M3 x 4 insert, radial, for the pot hub's set screw (M3 x 6)
 
 /* ---------- Frame ---------- */
 plate_t   = flange_to_horn - spline_h + 1.6;  // deeper than the servo case below the ears
@@ -74,10 +81,7 @@ board_hole_dx    = 50.8;   // 2.000"
 board_hole_dy    = 40.6;   // 1.600"
 board_parts_h    = 11.5;   // 0.453" tallest component, which hangs downward
 stud_h           = 5.0;    // same as the 5 mm spacers supplied with the board
-stud_d           = 7.0;
-board_bolt       = 3.4;    // M3 clearance: supplied M3 x 20 bolt up through board, stud and shelf
-board_nut_af     = 5.7;    // M3 nut, in a recess on the top of the shelf
-board_nut_h      = 2.6;
+stud_d           = 8.0;    // room around the insert in its end
 board_gap        = 3.0;    // board edge clearance from the main plate edge
 
 $fn = 72;
@@ -103,19 +107,21 @@ function x_of(i) = i * pitch;
 
 /* ---------- Frame ---------- */
 module servo_holes() {
-    // relative to the pot axis
+    // relative to the pot axis: an insert in the top face, and clearance below it for the bolt's end
     c = servo_dir * spline_offset;
     for (sx = [-1, 1], sy = [-1, 1])
-        translate([sx * ear_hole_dx / 2, c + sy * ear_hole_dy / 2, -1])
-            cylinder(d = screw_pilot, h = 50);
+        translate([sx * ear_hole_dx / 2, c + sy * ear_hole_dy / 2, 0]) {
+            translate([0, 0, flange_z - ear_insert - 0.5]) cylinder(d = insert_d, h = ear_insert + 1.5);
+            translate([0, 0, plate_z0 - 1]) cylinder(d = m3_clear, h = plate_t + 2);
+        }
 }
 
 module servo_body_cut() {
     c = servo_dir * spline_offset;
     // The servo case and the coupler hub both pass straight through the plate, so a servo with its
     // horn and hub already screwed on drops in from above.
-    translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 - 1])
-        cube([servo_W + 1, servo_L + 1, plate_t + 2]);
+    translate([-(servo_W + 1) / 2, c - pocket_L / 2, plate_z0 - 1])
+        cube([servo_W + 1, pocket_L, plate_t + 2]);
     translate([0, 0, plate_z0 - 1]) cylinder(d = tube_id, h = plate_t + 2);
     // grooves in the top face for the gussets under the ears
     for (sy = [-1, 1])
@@ -124,7 +130,7 @@ module servo_body_cut() {
     // Where that opening undercuts the tube wall, the wall is cut back with a flare down to the
     // set-screw slot, so it prints plate-down without starting in midair: a radius eases it off
     // vertical, then it narrows at the overhang angle.
-    translate([0, c + (servo_L + 1) / 2, plate_z0]) rotate([90, 0, 0]) linear_extrude(servo_L + 1) flare_profile();
+    translate([0, c + pocket_L / 2, plate_z0]) rotate([90, 0, 0]) linear_extrude(pocket_L) flare_profile();
 }
 
 // Half-width runs from the servo opening (at z = 0) down to the slot (below), mirrored about x = 0.
@@ -177,10 +183,9 @@ module board_studs() {
 }
 
 module board_stud_cuts() {
-    board_holes(board_bolt, stud_h + plate_t + 2, plate_z0 - stud_h - 1);
-    for (sx = [-1, 1], sy = [-1, 1])
-        translate([frame_cx() + sx * board_hole_dx / 2, board_cy() + sy * board_hole_dy / 2, flange_z - board_nut_h])
-            cylinder(d = board_nut_af / cos(30), h = board_nut_h + 1, $fn = 6);
+    // insert in the end of each stud; the bolt's end runs on into the clearance hole above it
+    board_holes(insert_d, board_insert + 1.5, plate_z0 - stud_h - 1);
+    board_holes(m3_clear, stud_h + plate_t + 2, plate_z0 - stud_h - 1);
 }
 
 module tube(i) {
@@ -275,9 +280,11 @@ module hub_pot() {
         cylinder(d = hub_d, h = hubA_h);
         pointer(hubA_h);
         translate([0, 0, -eps]) cylinder(d = shaft_d + 0.2, h = grip_len + eps);
-        // set screw, radial, with captive nut slot opening at the bottom
-        translate([0, 0, grip_len / 2]) rotate([0, 90, 0]) cylinder(d = setscrew, h = hub_d);
-        translate([shaft_d / 2 + 2.2, -m3_nut_af / 2, -eps]) cube([2.6, m3_nut_af, grip_len / 2 + m3_nut_af / 2]);
+        // set screw, radial, in an insert pressed down to the step at the bottom of its hole
+        translate([0, 0, grip_len / 2]) rotate([0, 90, 0]) {
+            cylinder(d = m3_clear, h = hub_d);
+            translate([0, 0, hub_d / 2 - setscrew_seat - hub_insert - 0.3]) cylinder(d = insert_d, h = hub_d);
+        }
     }
 }
 
@@ -358,6 +365,16 @@ else if (part == "coupler_set") {   // one of each, for a fit test
     hub_pot();
     translate([hub_d + 4, 0, 0]) disc();
     translate([2 * (hub_d + 4), 0, 0]) rotate([180, 0, 0]) translate([0, 0, -hubB_h]) hub_servo();
+}
+else if (part == "insert_test") {   // M3 insert holes (4.2 mm knurls) from 3.7 to 4.1 mm: pick the one that grips best
+    ds = [3.7, 3.8, 3.9, 4.0, 4.1];
+    difference() {
+        cube([len(ds) * 9 + 2, 13, 7]);
+        for (i = [0 : len(ds) - 1]) translate([5.5 + i * 9, 0, 0]) {
+            translate([0, 8.5, 1.2]) cylinder(d = ds[i], h = 7);
+            translate([0, 3, 7 - 0.6]) linear_extrude(1) text(str(ds[i] * 10), size = 3, halign = "center", valign = "center");
+        }
+    }
 }
 else if (part == "couplers")
     for (i = [0 : n_pots - 1]) translate([i * (hub_d + 4), 0, 0]) {

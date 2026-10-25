@@ -14,7 +14,7 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
   coaxially and stop it from rotating. The servos hang upside down, splines pointing down.
 - **Couplers** (`part="couplers"`): 3-piece Oldham couplers, so the servo and the pot don't
   have to line up perfectly. The pot hub grips the 1/4" shaft with an M3 set screw
-  (captive nut), which you reach through a window in the tube. The servo hub screws to the
+  (in a brass heat-set insert), which you reach through a slot in the tube. The servo hub screws to the
   20 mm aluminum disc horn on the servo.
 - **Electronics:** VINT hub → RCC1000 (16-channel RC servo Phidget) set to 6 V servo
   power, or an older 1061 AdvancedServo 8-Motor on USB. Channels 0–3 = treble, mid, bass, reverb.
@@ -51,22 +51,27 @@ works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.
 
 | Qty | Part | Used for |
 |---|---|---|
-| 4 (+spares) | M3 × 6 cup-point set screws | Pot hub onto the 1/4" shaft |
-| 4 | M3 hex nuts | Captive nut in each pot hub |
+| 4 (+spares) | M3 × 6 cup-point set screws | Pot hub onto the 1/4" shaft; longer ones stick out into the tube clearance |
+| 24 | M3 × 4 brass heat-set inserts (4.2 mm knurl) | 16 in the frame's top face for the servo ears, 4 in the pot hubs (pressed down to the step, 1.5 mm below the surface), plus spares |
+| 4 | M3 × 5 brass heat-set inserts | Ends of the 1061 board studs |
+| 16 | M3 × 8 socket-head bolts + M3 washers | Servo ears to the frame inserts |
 | 4 (+1) | 19.8 mm aluminum 25T disc servo horns, 4 × M3 tapped holes on a 14 mm circle | Instead of the servo's plastic horn; the model is sized for this one (2.45 mm disc, 9 mm boss, 4.5 mm overall) |
 | 8 | M3 × 6 button-head screws | Coupler hub up into the horn's tapped holes |
-| 4 | M3 × 20 bolts, M3 nuts | 1061 board to the frame studs (included with the 1061) |
+| 4 | M3 × 8 bolts | 1061 board up into the stud inserts (the M3 × 20 bolts and spacers that come with the 1061 aren't used) |
 | — | Thin felt or rubber pads (optional) | Under the tube bottoms to protect the panel |
 | — | Velcro strap or Command strips (optional) | Only if the frame rocks |
 
 Each servo comes with a round disc horn, other arms, the M3 horn screw, and self-tapping
-screws with rubber grommets and brass eyelets for the mounting ears. Use the self-tapping screws
-(the model uses a 20 mm aluminum horn rather than the included plastic one). Leave the grommets out: a rigid mount holds position better.
+screws with rubber grommets and brass eyelets for the mounting ears. None of those are used: the ears bolt
+into inserts, and the model uses a 20 mm aluminum horn rather than the included plastic one. Leave the grommets out: a rigid mount holds position better.
 (goBILDA's 1906 aluminum hub is 32 mm across and won't fit between 34.7 mm-spaced shafts.)
 
 ### Tools
 
-Calipers, 1.5 mm hex key (M3 set screws), small screwdriver.
+Calipers, heat-set insert tool with an M3 tip, 1.5 mm hex key (M3 set screws), 2.5 mm hex key (M3 socket heads).
+
+Print `part="insert_test"` first (about 30 min): five M3 insert holes from 3.7 to 4.1 mm, labeled on
+top. Set `insert_d` to the one where an insert goes in straight and holds without bulging the wall.
 
 **Rough total:** $260–300.
 
