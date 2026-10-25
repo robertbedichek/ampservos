@@ -72,7 +72,7 @@ into inserts, and the model uses a 20 mm aluminum horn rather than the included 
 Calipers, heat-set insert tool with an M3 tip, 1.5 mm hex key (M3 set screws), 2.5 mm hex key (M3 socket heads).
 
 Print `part="coupon"` first (about 1 h): five M3 insert holes from 3.7 to 4.1 mm, labeled on top, and
-one nut collar. Set `insert_d` to the hole where an insert goes in straight and holds without bulging the
+one nut collar. Set `insert_d` (3.9 mm on a Prusa MK3S in PETG) to the hole where an insert goes in straight and holds without bulging the
 wall, and check that the collar sits snugly on a pot nut. The guitar logo cut into the coupon's underside
 shows how the one on the frame's board shelf will print, since both are on the bed face.
 

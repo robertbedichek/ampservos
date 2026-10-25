@@ -57,7 +57,7 @@ setscrew_seat = 1.5; // the hub's set-screw insert sits this far below the surfa
                      // reaches the shaft without sticking out into the tube clearance
 
 /* ---------- Heat-set inserts (M3) ---------- */
-insert_d   = 4.0;    // hole for the kit's M3 brass inserts (4.2 mm over the knurls): set from part="insert_test"
+insert_d   = 3.9;    // hole for the kit's M3 brass inserts (4.2 mm over the knurls): 3.9 fit best on the coupon
 m3_clear   = 3.4;
 ear_insert = 4;      // M3 x 4 inserts in the top face for the servo ears (M3 x 8 bolts and washers)
 board_insert = 5;    // M3 x 5 inserts in the board studs (M3 x 8 bolts up through the board)
