@@ -62,6 +62,9 @@ tube_id   = max(horn_d, hub_d) + 2 * clear;
 tube_od   = tube_id + 2 * wall;
 pocket_d  = nut_af / cos(30) + 0.6;   // round, so nut orientation doesn't matter
 window_w  = 12;      // set-screw access window
+overhang  = 60;      // steepest unsupported slope, degrees from horizontal (45 printed rough in PETG)
+flare_r   = 4;       // radius easing the tube wall off vertical into that slope
+chamfer   = 1;       // on the plate's outside edges, both faces
 
 /* ---------- Phidgets 1061 board, hung under a shelf on the side away from the servo bodies ---------- */
 board            = true;
@@ -118,12 +121,28 @@ module servo_body_cut() {
     for (sy = [-1, 1])
         translate([-(ear_rib_w + 0.5) / 2, c + (sy < 0 ? -ear_span / 2 - 1 : servo_L / 2), flange_z - ear_rib_h - 0.6])
             cube([ear_rib_w + 0.5, (ear_span - servo_L) / 2 + 1, ear_rib_h + 1]);
-    // Where that opening undercuts the tube wall, the wall is cut back with a short 45-degree flare
-    // down to the set-screw slot, so it prints plate-down without starting in midair.
-    f = (servo_W + 1 - window_w) / 2;
+    // Where that opening undercuts the tube wall, the wall is cut back with a flare down to the
+    // set-screw slot, so it prints plate-down without starting in midair: a radius eases it off
+    // vertical, then it narrows at the overhang angle.
+    translate([0, c + (servo_L + 1) / 2, plate_z0]) rotate([90, 0, 0]) linear_extrude(servo_L + 1) flare_profile();
+}
+
+// Half-width runs from the servo opening (at z = 0) down to the slot (below), mirrored about x = 0.
+module flare_profile() {
+    xo = (servo_W + 1) / 2;
+    a  = 90 - overhang;
+    arc = [for (t = [0 : a / 8 : a]) [xo - flare_r + flare_r * cos(t), -flare_r * sin(t)]];
+    e  = arc[len(arc) - 1];
+    f  = [window_w / 2, e[1] - (e[0] - window_w / 2) * tan(overhang)];
+    right = concat(arc, [f]);
+    polygon(concat([[-xo, eps], [xo, eps]], right, [for (i = [len(right) - 1 : -1 : 0]) [-right[i][0], right[i][1]]]));
+}
+
+// Box with its outside edges chamfered on the top and bottom faces.
+module chamfered_box(size, ch) {
     hull() {
-        translate([-window_w / 2, c - (servo_L + 1) / 2, plate_z0 - f]) cube([window_w, servo_L + 1, eps]);
-        translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 - eps]) cube([servo_W + 1, servo_L + 1, eps]);
+        translate([ch, ch, 0]) cube([size[0] - 2 * ch, size[1] - 2 * ch, size[2]]);
+        translate([0, 0, ch]) cube([size[0], size[1], size[2] - 2 * ch]);
     }
 }
 
@@ -138,12 +157,12 @@ module plate_outline() {
     y0 = min(c - ear_span / 2, -tube_od / 2) - 3;
     y1 = max(c + ear_span / 2,  tube_od / 2) + 3;
     translate([-tube_od / 2 - 2, y0, plate_z0])
-        cube([x_of(n_pots - 1) + tube_od + 4, y1 - y0, plate_t]);
+        chamfered_box([x_of(n_pots - 1) + tube_od + 4, y1 - y0, plate_t], chamfer);
     if (board) {
         // shelf carrying the board
         w = board_L + 8;
         d = plate_near_edge() + board_gap + board_W + 4;
-        translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, plate_z0]) cube([w, d, plate_t]);
+        translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, plate_z0]) chamfered_box([w, d, plate_t], chamfer);
     }
 }
 
@@ -176,11 +195,15 @@ module nut_seat(i) {
     translate([x_of(i), 0, 0]) cylinder(d = tube_od, h = nut_h + 0.3 + (tube_id - pocket_d) / 2);
 }
 
-// Slot through the tube wall on the +Y (side = 1) or -Y side, from z0 to z1, with a 45-degree
-// pointed end below z0 so its panel-side end prints plate-down without a flat bridge.
+// Slot through the tube wall on the +Y (side = 1) or -Y side, straight from z0 to z1, with a
+// teardrop end below z0 (round, then pointed at the overhang angle) so its panel-side end prints
+// plate-down without a flat bridge. The point is window_w / 2 / cos(overhang) below z0.
 module slot(side, z0, z1) {
     translate([-window_w / 2, side < 0 ? -tube_od : 0, z0]) cube([window_w, tube_od, z1 - z0]);
-    translate([0, side * tube_od / 2, z0]) rotate([0, 45, 0]) cube([window_w / sqrt(2), tube_od, window_w / sqrt(2)], center = true);
+    translate([0, side < 0 ? 0 : tube_od, z0]) rotate([90, 0, 0]) linear_extrude(tube_od) hull() {
+        circle(d = window_w);
+        translate([0, -window_w / 2 / cos(overhang)]) square(eps, center = true);
+    }
 }
 
 module frame() {
@@ -206,10 +229,12 @@ module frame() {
             servo_holes();
             // set-screw slot, on the servo-body side so the board doesn't block the hex key; it runs
             // up into the servo opening, which leaves the coupler and horn screws in view
-            ws = hubA_z0 + grip_len / 2 - window_w * 0.8 + window_w / 2;
+            tip = window_w / 2 / cos(overhang);
+            ws = hubA_z0 + grip_len / 2 - window_w * 0.8 + tip;   // point stays 9.6 mm below the set screw
             slot(servo_dir, ws, plate_z0 + eps);
-            // wire / view slot on the board side
-            slot(-servo_dir, (nut_h + 2 + plate_z0) / 2 - 5, (nut_h + 2 + plate_z0) / 2 + 5);
+            // wire / view slot on the board side, its point kept 1 mm above the nut-seat cone
+            wz = nut_h + 0.3 + cone_h + 1 + tip;
+            slot(-servo_dir, wz, wz + 8);
         }
     }
 }
