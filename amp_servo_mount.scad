@@ -30,8 +30,8 @@ spline_offset  = 10.0;  // output axis distance from body center, along length
 flange_to_horn = 10.2;  // spline-side face of ears to spline tip (goBILDA drawing; 2.6 ear, 4.1 spline)
 spline_h       = 4.1;
 servo_dir      = -1;    // +1 / -1: which way the servo bodies extend in Y (away from handle)
-ear_rib_w      = 2.5;   // triangular gusset on the spline side of each ear, between its two slots:
-ear_rib_h      = 2.9;   // 2.9 mm tall at the case, tapering to 1 mm at the ear tip
+ear_rib_w      = 2.5;   // triangular gusset on the spline side of each ear, between its two slots,
+ear_rib_h      = 1.5;   // standing this far above the 2.7 mm ear
 
 /* ---------- Servo horn: 19.8 mm aluminum 25T disc, boss toward the servo, 4 x M3 tapped ---------- */
 horn_d      = 19.8;
@@ -118,10 +118,13 @@ module servo_body_cut() {
     for (sy = [-1, 1])
         translate([-(ear_rib_w + 1.5) / 2, c + (sy < 0 ? -ear_span / 2 - 1 : servo_L / 2), flange_z - ear_rib_h - 0.6])
             cube([ear_rib_w + 1.5, (ear_span - servo_L) / 2 + 1, ear_rib_h + 1]);
-    // Where that opening undercuts the tube wall, a 45-degree gable lets the wall grow in from the
-    // sides when printed plate-down, instead of starting on a flat bridge.
-    g = (servo_W + 1) / sqrt(2);
-    translate([0, c, plate_z0]) rotate([0, 45, 0]) cube([g, servo_L + 1, g], center = true);
+    // Where that opening undercuts the tube wall, the wall is cut back with a short 45-degree flare
+    // down to the set-screw slot, so it prints plate-down without starting in midair.
+    f = (servo_W + 1 - window_w) / 2;
+    hull() {
+        translate([-window_w / 2, c - (servo_L + 1) / 2, plate_z0 - f]) cube([window_w, servo_L + 1, eps]);
+        translate([-(servo_W + 1) / 2, c - (servo_L + 1) / 2, plate_z0 - eps]) cube([servo_W + 1, servo_L + 1, eps]);
+    }
 }
 
 // Plate edge on the side away from the servo bodies, as a distance from the pot axes.
@@ -194,9 +197,10 @@ module frame() {
             translate([0, 0, nut_h + 0.3 + cone_h]) cylinder(d = tube_id, h = plate_z0 - nut_h - 0.3 - cone_h - eps);
             servo_body_cut();
             servo_holes();
-            // set-screw window, on the servo-body side so the board doesn't block the hex key
-            translate([0, servo_dir * tube_od / 2, hubA_z0 + grip_len / 2])
-                cube([window_w, tube_od, window_w * 1.6], center = true);
+            // set-screw slot, on the servo-body side so the board doesn't block the hex key; it runs
+            // up into the servo opening, which leaves the coupler and horn screws in view
+            ws = hubA_z0 + grip_len / 2 - window_w * 0.8;
+            translate([-window_w / 2, servo_dir < 0 ? -tube_od : 0, ws]) cube([window_w, tube_od, plate_z0 - ws + eps]);
             // wire / view slot on the board side
             translate([0, -servo_dir * tube_od / 2, (nut_h + 2 + plate_z0) / 2])
                 cube([window_w, tube_od, 10], center = true);
