@@ -1,13 +1,15 @@
 // Four-servo knob actuator for Carr Super Bee: Treble, Mid, Bass, Reverb.
 // Servos hang upside down over the pots (output spline pointing down) and drive
 // the 1/4" shafts through 3-piece Oldham couplers, which absorb misalignment.
-// Each servo sits on a tube whose bottom pocket slips over that pot's mounting
-// nut, so the nuts themselves locate the frame. Nothing is drilled into the amp.
+// Each servo sits on a tube whose bottom slips over a printed collar on that pot's
+// mounting nut, so the nuts themselves locate the frame. Nothing is drilled into the amp.
+// The tube bore is wider than the couplers all the way down, so the frame lifts straight
+// off, leaving the collars and pot hubs on the amp.
 //
 // Units: mm. Z = 0 is the control-panel surface; X runs along the row of knobs.
 // Values marked MEASURE must be checked with calipers before printing.
 
-part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers" | "insert_test"
+part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers" | "collar" | "collars" | "insert_test"
 
 /* ---------- Amp ---------- */
 n_pots      = 4;
@@ -67,11 +69,16 @@ wall      = 2.5;
 clear     = 1.0;     // radial clearance around rotating parts
 tube_id   = max(horn_d, hub_d) + 2 * clear;
 tube_od   = tube_id + 2 * wall;
-pocket_d  = nut_af / cos(30) + 0.6;   // round, so nut orientation doesn't matter
 window_w  = 12;      // set-screw access window
 overhang  = 60;      // steepest unsupported slope, degrees from horizontal (45 printed rough in PETG)
 flare_r   = 4;       // radius easing the tube wall off vertical into that slope
 chamfer   = 1;       // on the plate's outside edges, both faces
+
+/* ---------- Nut collar: stays on each pot nut; the tube bottom slips over it ---------- */
+collar_fit = 0.3;                        // radial clearance in the tube bore
+collar_od  = tube_id - 2 * collar_fit;
+collar_h   = nut_h + 2.5;                // socket over the nut and washer, then a lip on top of the nut
+collar_af  = nut_af + 0.3;               // hex socket, snug on the nut so the collar can't turn
 
 /* ---------- Phidgets 1061 board, hung under a shelf on the side away from the servo bodies ---------- */
 board            = true;
@@ -83,6 +90,7 @@ board_parts_h    = 11.5;   // 0.453" tallest component, which hangs downward
 stud_h           = 5.0;    // same as the 5 mm spacers supplied with the board
 stud_d           = 8.0;    // room around the insert in its end
 board_gap        = 3.0;    // board edge clearance from the main plate edge
+shelf_t          = 5.7;    // thinner than the main plate; flush with it on the top (print-bed) face
 
 $fn = 72;
 eps = 0.01;
@@ -97,9 +105,10 @@ hubB_z0  = hubA_z0 + hubA_h + gap + disc_h + gap;
 horn_z0  = hubB_z0 + hubB_h;
 flange_z = horn_z0 + horn_h + flange_to_horn - spline_h;  // horn bottoms out at the spline root
 plate_z0 = flange_z - plate_t;
+shelf_z0 = flange_z - shelf_t;              // underside of the board shelf
 
 assert(hubA_z0 > bushing_top + 0.5, "shaft too short: hub would hit bushing; reduce grip_len");
-assert(hubA_z0 > nut_h + 0.3 + (tube_id - (nut_af / cos(30) + 0.6)) / 2, "pot hub would sit in the cone under the bore");
+assert(hubA_z0 > collar_h + 0.5, "pot hub would sit on the nut collar");
 assert(pitch > servo_W + 3, "pitch too tight for side-by-side servos");
 if (pitch < tube_od + 2) echo("WARNING: tubes merge; fine, but check knob spacing");
 
@@ -168,7 +177,7 @@ module plate_outline() {
         // shelf carrying the board
         w = board_L + 8;
         d = plate_near_edge() + board_gap + board_W + 4;
-        translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, plate_z0]) chamfered_box([w, d, plate_t], chamfer);
+        translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, shelf_z0]) chamfered_box([w, d, shelf_t], chamfer);
     }
 }
 
@@ -179,13 +188,13 @@ module board_holes(d, h, z0) {
 }
 
 module board_studs() {
-    board_holes(stud_d, stud_h + eps, plate_z0 - stud_h);
+    board_holes(stud_d, stud_h + eps, shelf_z0 - stud_h);
 }
 
 module board_stud_cuts() {
     // insert in the end of each stud; the bolt's end runs on into the clearance hole above it
-    board_holes(insert_d, board_insert + 1.5, plate_z0 - stud_h - 1);
-    board_holes(m3_clear, stud_h + plate_t + 2, plate_z0 - stud_h - 1);
+    board_holes(insert_d, board_insert + 1.5, shelf_z0 - stud_h - 1);
+    board_holes(m3_clear, stud_h + shelf_t + 2, shelf_z0 - stud_h - 1);
 }
 
 module tube(i) {
@@ -195,9 +204,16 @@ module tube(i) {
     }
 }
 
-module nut_seat(i) {
-    // solid at the bottom of the tube; frame() cuts the nut pocket and the cone up to the bore from it
-    translate([x_of(i), 0, 0]) cylinder(d = tube_od, h = nut_h + 0.3 + (tube_id - pocket_d) / 2);
+module collar() {
+    // as fitted, hex socket down over the nut; it prints lip-down, so the socket opens upward
+    difference() {
+        hull() {
+            cylinder(d = collar_od - 2, h = collar_h);
+            cylinder(d = collar_od, h = collar_h - 1);   // lead-in for the tube
+        }
+        translate([0, 0, -eps]) cylinder(d = collar_af / cos(30), h = nut_h + 0.2 + eps, $fn = 6);
+        cylinder(d = bushing_d + 1, h = collar_h + 1);
+    }
 }
 
 // Slot through the tube wall on the +Y (side = 1) or -Y side, straight from z0 to z1, with a
@@ -216,20 +232,17 @@ module frame() {
         union() {
             plate_outline();
             if (board) board_studs();
-            for (i = [0 : n_pots - 1]) { tube(i); nut_seat(i); }
+            for (i = [0 : n_pots - 1]) tube(i);
             // webs tying neighboring tubes together low down, for stiffness
             for (i = [0 : n_pots - 2])
                 translate([x_of(i), -wall, 0]) cube([pitch, 2 * wall, plate_z0]);
         }
         if (board) board_stud_cuts();
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
-            // keep the webs out of the bore and the nut pocket
-            // pocket over the nut, then a 45-degree cone up to the bore so the frame prints
-            // plate-down without a flat overhang
-            cone_h = (tube_id - pocket_d) / 2;
-            translate([0, 0, -eps]) cylinder(d = pocket_d, h = nut_h + 0.3 + 2 * eps);
-            translate([0, 0, nut_h + 0.3]) cylinder(d1 = pocket_d, d2 = tube_id, h = cone_h + eps);
-            translate([0, 0, nut_h + 0.3 + cone_h]) cylinder(d = tube_id, h = plate_z0 - nut_h - 0.3 - cone_h - eps);
+            // keep the webs out of the bore, which runs full width to the bottom so the frame lifts
+            // off over the pot hubs; a 45-degree lead-in at the bottom for the collar
+            translate([0, 0, -eps]) cylinder(d = tube_id, h = plate_z0);
+            translate([0, 0, -eps]) cylinder(d1 = tube_id + 2, d2 = tube_id, h = 1 + eps);
             servo_body_cut();
             servo_holes();
             // set-screw slot, on the servo-body side so the board doesn't block the hex key; it runs
@@ -237,15 +250,15 @@ module frame() {
             tip = window_w / 2 / cos(overhang);
             ws = hubA_z0 + grip_len / 2 - window_w * 0.8 + tip;   // point stays 9.6 mm below the set screw
             slot(servo_dir, ws, plate_z0 + eps);
-            // wire / view slot on the board side, its point kept 1 mm above the nut-seat cone
-            wz = nut_h + 0.3 + cone_h + 1 + tip;
+            // wire / view slot on the board side, its point kept 1 mm above the collar
+            wz = collar_h + 1 + tip;
             slot(-servo_dir, wz, wz + 8);
         }
     }
 }
 
 // One station cut from the frame (first tube and its servo mount), for checking fits before
-// printing the whole thing: nut pocket, servo holes, coupler clearance, set-screw access.
+// printing the whole thing: collar fit, servo holes, coupler clearance, set-screw access.
 module test_station() {
     intersection() {
         frame();
@@ -325,7 +338,7 @@ module ghost_servo(i) {
 }
 
 module ghost_board() {
-    z = plate_z0 - stud_h - 1.6;
+    z = shelf_z0 - stud_h - 1.6;
     color("darkgreen") translate([frame_cx() - board_L / 2, board_cy() - board_W / 2, z]) cube([board_L, board_W, 1.6]);
     color("dimgray", 0.6) translate([frame_cx() - board_L / 2 + 4, board_cy() - board_W / 2 + 4, z - board_parts_h])
         cube([board_L - 8, board_W - 8, board_parts_h]);
@@ -345,13 +358,14 @@ module assembly() {
     color("silver") for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
         cylinder(d = nut_af / cos(30), h = nut_h, $fn = 6);
         cylinder(d = bushing_d, h = bushing_top);
+        color("tomato") collar();
         cylinder(d = shaft_d, h = shaft_top);
     }
 }
 
 echo(str("plate underside at z = ", plate_z0, " mm; servo ears at z = ", flange_z, " mm above panel"));
 if (board) echo(str("1061 board hangs component-side down; its lowest parts are ",
-    plate_z0 - stud_h - 1.6 - board_parts_h, " mm above the panel, and it reaches ",
+    shelf_z0 - stud_h - 1.6 - board_parts_h, " mm above the panel, and it reaches ",
     abs(board_cy()) + board_W / 2, " mm from the pot axes"));
 echo(str("tube OD = ", tube_od, " mm; frame length = ", x_of(n_pots - 1) + tube_od + 4, " mm"));
 
@@ -367,6 +381,9 @@ else if (part == "coupler_set") {   // one of each, for a fit test
     translate([hub_d + 4, 0, 0]) disc();
     translate([2 * (hub_d + 4), 0, 0]) rotate([180, 0, 0]) translate([0, 0, -hubB_h]) hub_servo();
 }
+else if (part == "collar") rotate([180, 0, 0]) translate([0, 0, -collar_h]) collar();
+else if (part == "collars")
+    for (i = [0 : n_pots - 1]) translate([i * (collar_od + 4), 0, 0]) rotate([180, 0, 0]) translate([0, 0, -collar_h]) collar();
 else if (part == "insert_test") {   // M3 insert holes (4.2 mm knurls) from 3.7 to 4.1 mm: pick the one that grips best
     ds = [3.7, 3.8, 3.9, 4.0, 4.1];
     difference() {

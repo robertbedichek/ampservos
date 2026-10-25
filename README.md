@@ -10,8 +10,9 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
 - **Servos:** goBILDA 2000-series Dual Mode Servo, set to servo mode: 300° over 500–2500 µs,
   which matches the pots' 300° travel, and gives absolute position with no homing.
 - **Frame** (`part="frame"`): one printed bridge. Under each servo is a tube whose
-  bottom pocket slips over that pot's mounting nut, so the four nuts locate the frame
-  coaxially and stop it from rotating. The servos hang upside down, splines pointing down.
+  bottom slips over a printed collar on that pot's mounting nut (`part="collars"`), so the four
+  nuts locate the frame coaxially and stop it from rotating. The bore is wider than the couplers
+  all the way down, so the frame lifts straight off without tools. The servos hang upside down, splines pointing down.
 - **Couplers** (`part="couplers"`): 3-piece Oldham couplers, so the servo and the pot don't
   have to line up perfectly. The pot hub grips the 1/4" shaft with M3 set screws
   (two, 90° apart, in brass heat-set inserts), which you reach through a slot in the tube. The servo hub screws to the
@@ -23,7 +24,7 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
 
 ## Parts list
 
-Besides the printed frame and couplers. Prices are rough.
+Besides the printed frame, couplers and nut collars. Prices are rough.
 
 ### Electronics (Phidgets)
 
@@ -87,13 +88,13 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 | `horn_*` | set for a 19.8 mm aluminum 25T horn (14 mm M3 hole circle). Change them if you use a different horn. (Servo dims are from the goBILDA drawing.) |
 
 Start with a fit test in PETG: one coupler set (`part="couplers"` makes four sets, so print one of each
-piece) and `part="test_station"`, a single tube cut from the frame. Check that the nut pocket centers on
-the pot nut, the servo holes line up, the coupler turns freely, and the set screw is reachable.
+piece) and `part="test_station"`, a single tube cut from the frame. Check that a collar fits snugly on the pot nut,
+the tube slips over it, the servo holes line up, the coupler turns freely, and the set screw is reachable.
 
-Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers`).
+Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers` and `collars`).
 
 The 1061 board hangs component-side down, under a shelf on the side away from the servo bodies.
-Its lowest parts sit about 23 mm above the panel, and the shelf reaches about 75 mm from the
+Its lowest parts sit about 24 mm above the panel, and the shelf reaches about 75 mm from the
 shaft line. Check that there's room for this on your amp. Set `board = false` to leave the shelf off.
 The set-screw windows face the servo-body side.
 
@@ -106,7 +107,7 @@ bridges; the slot ends are teardrops pointed at 60°, and the plate edges are ch
 with its horn and coupler hub already screwed on.
 
 Print in **PETG or ASA**, not PLA: the top panel of a tube amp gets warm.
-Print the frame plate-down.
+Print the frame plate-down, and the collars lip-down.
 
 ## Use
 
@@ -123,7 +124,8 @@ Record knob 0 and knob 10 a few degrees inside each stop.
 
 ## Removing and refitting
 
-The frame is held on by gravity and the nut pockets, and the couplers separate by lifting.
+The frame is held on by gravity and the four nut collars, and the couplers separate by lifting, so no tools
+are needed. The collars and pot hubs stay on the amp.
 
 1. `./ampservos.py --park`: all knobs go to 5.
 2. Unplug USB and power, then lift the frame straight up. The servo-side hubs stay on the horns.
