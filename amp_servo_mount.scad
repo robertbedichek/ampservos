@@ -274,14 +274,15 @@ module pointer(h) {
 }
 
 module hub_pot() {
-    // grips the pot shaft with an M3 set screw; tongue along X on top
+    // grips the pot shaft with two M3 set screws; tongue along X on top
     translate([0, 0, hubA_h - eps]) tongue(0, tongue_h + eps);
     difference() {
         cylinder(d = hub_d, h = hubA_h);
         pointer(hubA_h);
         translate([0, 0, -eps]) cylinder(d = shaft_d + 0.2, h = grip_len + eps);
-        // set screw, radial, in an insert pressed down to the step at the bottom of its hole
-        translate([0, 0, grip_len / 2]) rotate([0, 90, 0]) {
+        // two set screws 90 degrees apart (clear of the pointer), so the shaft sits in a V against the
+        // bore; each in an insert pressed down to the step at the bottom of its hole
+        for (a = [0, -90]) rotate([0, 0, a]) translate([0, 0, grip_len / 2]) rotate([0, 90, 0]) {
             cylinder(d = m3_clear, h = hub_d);
             translate([0, 0, hub_d / 2 - setscrew_seat - hub_insert - 0.3]) cylinder(d = insert_d, h = hub_d);
         }

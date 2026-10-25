@@ -13,8 +13,8 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
   bottom pocket slips over that pot's mounting nut, so the four nuts locate the frame
   coaxially and stop it from rotating. The servos hang upside down, splines pointing down.
 - **Couplers** (`part="couplers"`): 3-piece Oldham couplers, so the servo and the pot don't
-  have to line up perfectly. The pot hub grips the 1/4" shaft with an M3 set screw
-  (in a brass heat-set insert), which you reach through a slot in the tube. The servo hub screws to the
+  have to line up perfectly. The pot hub grips the 1/4" shaft with M3 set screws
+  (two, 90° apart, in brass heat-set inserts), which you reach through a slot in the tube. The servo hub screws to the
   20 mm aluminum disc horn on the servo.
 - **Electronics:** VINT hub → RCC1000 (16-channel RC servo Phidget) set to 6 V servo
   power, or an older 1061 AdvancedServo 8-Motor on USB. Channels 0–3 = treble, mid, bass, reverb.
@@ -51,8 +51,8 @@ works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.
 
 | Qty | Part | Used for |
 |---|---|---|
-| 4 (+spares) | M3 × 6 cup-point set screws | Pot hub onto the 1/4" shaft; longer ones stick out into the tube clearance |
-| 24 | M3 × 4 brass heat-set inserts (4.2 mm knurl) | 16 in the frame's top face for the servo ears, 4 in the pot hubs (pressed down to the step, 1.5 mm below the surface), plus spares |
+| 8 (+spares) | M3 × 6 cup-point set screws | Two per pot hub, 90° apart, onto the 1/4" shaft; longer ones stick out into the tube clearance |
+| 24 (+spares) | M3 × 4 brass heat-set inserts (4.2 mm knurl) | 16 in the frame's top face for the servo ears, 8 in the pot hubs (pressed down to the step, 1.5 mm below the surface) |
 | 4 | M3 × 5 brass heat-set inserts | Ends of the 1061 board studs |
 | 16 | M3 × 8 socket-head bolts + M3 washers | Servo ears to the frame inserts |
 | 4 (+1) | 19.8 mm aluminum 25T disc servo horns, 4 × M3 tapped holes on a 14 mm circle | Instead of the servo's plastic horn; the model is sized for this one (2.45 mm disc, 9 mm boss, 4.5 mm overall) |
@@ -100,7 +100,7 @@ The set-screw windows face the servo-body side.
 Slice with the MK3S PETG settings in `slicer/petg_mk3s.ini` (0.20 mm QUALITY, Prusament PETG,
 4 perimeters, 40% infill, no supports):
 `PrusaSlicer --export-gcode --load slicer/petg_mk3s.ini stl/frame.stl --output gcode/ampservo-frame_PETG.gcode`.
-About 9.5 h for the frame and 4 h for the four coupler sets. Each servo opening goes straight through
+Slice the couplers with `--fill-density 100% --fill-pattern rectilinear` so the plastic around the hub inserts is solid. About 9.5 h for the frame and 4 h for the four coupler sets. Each servo opening goes straight through
 the plate and opens into the set-screw slot (with a rounded 60° flare where they meet), so there are no long
 bridges; the slot ends are teardrops pointed at 60°, and the plate edges are chamfered. Supports aren't needed. Because the opening is open, a servo can go in from above
 with its horn and coupler hub already screwed on.
