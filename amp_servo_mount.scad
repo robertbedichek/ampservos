@@ -9,7 +9,7 @@
 // Units: mm. Z = 0 is the control-panel surface; X runs along the row of knobs.
 // Values marked MEASURE must be checked with calipers before printing.
 
-part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers" | "collar" | "collars" | "insert_test"
+part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "hub_pot" | "hub_servo" | "disc" | "couplers" | "collar" | "collars" | "insert_test" | "coupon"
 
 /* ---------- Amp ---------- */
 n_pots      = 4;
@@ -92,6 +92,12 @@ stud_d           = 8.0;    // room around the insert in its end
 board_gap        = 3.0;    // board edge clearance from the main plate edge
 shelf_t          = 5.7;    // thinner than the main plate; flush with it on the top (print-bed) face
 
+/* ---------- Logo: an electric guitar engraved in the board shelf's top face ---------- */
+logo       = true;
+logo_len   = 46;     // nut of the headstock to the bottom of the body
+logo_line  = 0.9;    // stroke width: two extrusions, and the layer above only bridges this far
+logo_depth = 0.6;
+
 $fn = 72;
 eps = 0.01;
 
@@ -159,6 +165,33 @@ module chamfered_box(size, ch) {
         translate([ch, ch, 0]) cube([size[0] - 2 * ch, size[1] - 2 * ch, size[2]]);
         translate([0, 0, ch]) cube([size[0], size[1], size[2] - 2 * ch]);
     }
+}
+
+// Single-cut electric guitar along +X (lower bout at the origin), drawn as filled shapes.
+module guitar_shape() {
+    difference() {
+        hull() { scale([1.08, 1]) circle(r = 10); translate([14, 0]) circle(r = 7.2); }
+        for (sy = [-1, 1]) translate([7.8, sy * 12.6]) circle(r = 6);    // waist
+        translate([19.2, -4.6]) circle(r = 4.2);                         // cutaway
+    }
+    translate([18, -1.7]) square([24, 3.4]);                             // neck
+    translate([42, 0]) polygon([[0, -2.2], [10, -3.4], [11.5, -2.4], [11.5, 3], [0, 2.2]]);  // headstock
+    for (i = [0 : 2], sy = [-1, 1]) translate([44.5 + i * 3.2, sy * (2.6 + i * 0.35) - 0.7, 0]) square([1.4, 1.4]);  // tuner pegs
+}
+
+module guitar_logo(len) {
+    k = len / 64;
+    scale(k) {
+        difference() { offset(r = logo_line / k / 2) guitar_shape(); offset(r = -logo_line / k / 2) guitar_shape(); }
+        for (x = [0.5, 8]) translate([x - 1.3, -4.2]) square([2.6, 8.4]);   // humbuckers
+        translate([-5.2, -3.6]) square([1.4, 7.2]);                          // bridge
+        for (p = [[-3.5, -6.2], [0.5, -7.2], [-5.5, 5.2], [-1.5, 6.6]]) translate(p) circle(d = 2.2);  // knobs
+    }
+}
+
+// The logo centered on the origin, ready to cut into a face at z = 0 (reads correctly from +Z).
+module logo_cut(len) {
+    translate([0, 0, -logo_depth]) linear_extrude(logo_depth + 1) translate([-21.4 * len / 64, 0]) guitar_logo(len);
 }
 
 // Plate edge on the side away from the servo bodies, as a distance from the pot axes.
@@ -238,6 +271,7 @@ module frame() {
                 translate([x_of(i), -wall, 0]) cube([pitch, 2 * wall, plate_z0]);
         }
         if (board) board_stud_cuts();
+        if (board && logo) translate([frame_cx(), board_cy(), flange_z]) logo_cut(logo_len);
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
             // keep the webs out of the bore, which runs full width to the bottom so the frame lifts
             // off over the pot hubs; a 45-degree lead-in at the bottom for the collar
@@ -326,6 +360,23 @@ module hub_servo() {
     }
 }
 
+/* ---------- Coupon ---------- */
+// M3 insert holes (4.2 mm knurls) from 3.7 to 4.1 mm: pick the one that grips best. The logo is cut
+// into the bottom face, as on the frame's board shelf, and reads correctly with the coupon turned over.
+coupon_ds = [3.7, 3.8, 3.9, 4.0, 4.1];
+coupon_L  = len(coupon_ds) * 9 + 5;
+coupon_W  = 22;
+module insert_test() {
+    difference() {
+        cube([coupon_L, coupon_W, 7]);
+        for (i = [0 : len(coupon_ds) - 1]) translate([7 + i * 9, 0, 0]) {
+            translate([0, 15, 1.2]) cylinder(d = coupon_ds[i], h = 7);
+            translate([0, 6, 7 - 0.6]) linear_extrude(1) text(str(coupon_ds[i] * 10), size = 3, halign = "center", valign = "center");
+        }
+        translate([coupon_L / 2, coupon_W / 2, 0]) rotate([180, 0, 0]) logo_cut(coupon_L - 6);
+    }
+}
+
 /* ---------- Placeholders for the assembly view ---------- */
 module ghost_servo(i) {
     c = servo_dir * spline_offset;
@@ -384,15 +435,10 @@ else if (part == "coupler_set") {   // one of each, for a fit test
 else if (part == "collar") rotate([180, 0, 0]) translate([0, 0, -collar_h]) collar();
 else if (part == "collars")
     for (i = [0 : n_pots - 1]) translate([i * (collar_od + 4), 0, 0]) rotate([180, 0, 0]) translate([0, 0, -collar_h]) collar();
-else if (part == "insert_test") {   // M3 insert holes (4.2 mm knurls) from 3.7 to 4.1 mm: pick the one that grips best
-    ds = [3.7, 3.8, 3.9, 4.0, 4.1];
-    difference() {
-        cube([len(ds) * 9 + 2, 13, 7]);
-        for (i = [0 : len(ds) - 1]) translate([5.5 + i * 9, 0, 0]) {
-            translate([0, 8.5, 1.2]) cylinder(d = ds[i], h = 7);
-            translate([0, 3, 7 - 0.6]) linear_extrude(1) text(str(ds[i] * 10), size = 3, halign = "center", valign = "center");
-        }
-    }
+else if (part == "insert_test") insert_test();
+else if (part == "coupon") {   // insert sizing, with the logo underneath as it prints on the frame, and one collar
+    insert_test();
+    translate([coupon_L + 4 + collar_od / 2, coupon_W / 2, 0]) rotate([180, 0, 0]) translate([0, 0, -collar_h]) collar();
 }
 else if (part == "couplers")
     for (i = [0 : n_pots - 1]) translate([i * (hub_d + 4), 0, 0]) {
