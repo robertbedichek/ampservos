@@ -104,7 +104,7 @@ The set-screw windows face the servo-body side.
 Slice with the MK3S PETG settings in `slicer/petg_mk3s.ini` (0.20 mm QUALITY, Prusament PETG,
 4 perimeters, 40% infill, no supports):
 `PrusaSlicer --export-gcode --load slicer/petg_mk3s.ini stl/frame.stl --output gcode/ampservo-frame_PETG.gcode`.
-Slice the couplers with `--fill-density 100% --fill-pattern rectilinear` so the plastic around the hub inserts is solid. About 9.5 h for the frame and 4 h for the four coupler sets. Each servo opening goes straight through
+Slice the couplers with `--fill-density 100% --fill-pattern rectilinear` so the plastic around the hub inserts is solid. Or print everything at once: `plates/ampservo-plate.3mf` has the frame (40%), four coupler sets and four collars (both 100%) on one MK3S plate, about 14 h and 150 g: `PrusaSlicer --export-gcode --dont-arrange --load slicer/petg_mk3s.ini plates/ampservo-plate.3mf`. About 9.5 h for the frame and 4 h for the four coupler sets. Each servo opening goes straight through
 the plate and opens into the set-screw slot (with a rounded 60° flare where they meet), so there are no long
 bridges; the slot ends are teardrops pointed at 60°, and the plate edges are chamfered. Supports aren't needed. Because the opening is open, a servo can go in from above
 with its horn and coupler hub already screwed on.
