@@ -97,7 +97,7 @@ Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and th
 
 The 1061 board sits component-side up on its 5 mm spacers, on a shelf on the side away from the servo
 bodies. The shelf reaches about 70 mm from the shaft line, short of the amp's handle. A 5 mm ridge runs
-across the middle of its underside, parallel to the row of servos and 22 mm deep, to stiffen the frame,
+across its underside 5 mm in from the outer edge, parallel to the row of servos and 22 mm deep, to stiffen the frame,
 with the guitar logo on the side facing the handle; it comes down to about 20 mm above the panel. Set `board = false` to leave the shelf off.
 The set-screw windows face the servo-body side.
 

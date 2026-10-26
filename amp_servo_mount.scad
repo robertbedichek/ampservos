@@ -98,6 +98,7 @@ shelf_t          = 5.7;    // thinner than the main plate; flush with it on the 
 /* ---------- Ridge under the board shelf, for stiffness, with the logo on its side ---------- */
 ridge_t    = 5;
 ridge_h    = 22;     // below the shelf's underside
+ridge_in   = 5;      // its outer face is this far in from the shelf's outer edge
 
 /* ---------- Logo: an electric guitar engraved in the ridge's side ---------- */
 logo       = true;
@@ -218,8 +219,8 @@ module plate_outline() {
         w = board_L + 8;
         d = shelf_d();
         translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, shelf_z0]) chamfered_box([w, d, shelf_t], chamfer);
-        // ridge across the middle of its underside, parallel to the row of servos
-        translate([frame_cx() - w / 2 + chamfer, board_cy() - ridge_t / 2, shelf_z0 - ridge_h]) cube([w - 2 * chamfer, ridge_t, ridge_h + eps]);
+        // ridge across its underside near the outer edge, parallel to the row of servos
+        translate([frame_cx() - w / 2 + chamfer, ridge_cy() - ridge_t / 2, shelf_z0 - ridge_h]) cube([w - 2 * chamfer, ridge_t, ridge_h + eps]);
     }
 }
 
@@ -236,6 +237,7 @@ module board_cuts() {
 }
 
 function shelf_d() = plate_near_edge() + board_gap + board_W + 4;
+function ridge_cy() = -servo_dir * (shelf_d() - ridge_in - ridge_t / 2);
 
 module tube(i) {
     translate([x_of(i), 0, 0]) difference() {
@@ -279,7 +281,7 @@ module frame() {
         }
         if (board) board_cuts();
         // logo on the ridge's side facing the handle
-        if (board && logo) translate([frame_cx(), board_cy() - servo_dir * ridge_t / 2, shelf_z0 - ridge_h / 2])
+        if (board && logo) translate([frame_cx(), ridge_cy() - servo_dir * ridge_t / 2, shelf_z0 - ridge_h / 2])
             rotate([90, 0, servo_dir < 0 ? 180 : 0]) logo_cut(logo_len);
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
             // keep the webs out of the bore, which runs full width to the bottom so the frame lifts
