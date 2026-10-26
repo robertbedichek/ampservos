@@ -54,11 +54,11 @@ works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.
 |---|---|---|
 | 8 (+spares) | M3 × 6 cup-point set screws | Two per pot hub, 90° apart, onto the 1/4" shaft; longer ones stick out into the tube clearance |
 | 24 (+spares) | M3 × 4 brass heat-set inserts (4.2 mm knurl) | 16 in the frame's top face for the servo ears, 8 in the pot hubs (pressed down to the step, 1.5 mm below the surface) |
-| 4 | M3 × 5 brass heat-set inserts | Ends of the 1061 board studs |
+| 4 | M3 × 5 brass heat-set inserts | Top face of the board shelf |
 | 16 | M3 × 8 socket-head bolts + M3 washers | Servo ears to the frame inserts |
 | 4 (+1) | 19.8 mm aluminum 25T disc servo horns, 4 × M3 tapped holes on a 14 mm circle | Instead of the servo's plastic horn; the model is sized for this one (2.45 mm disc, 9 mm boss, 4.5 mm overall) |
 | 8 | M3 × 6 button-head screws | Coupler hub up into the horn's tapped holes |
-| 4 | M3 × 8 bolts | 1061 board up into the stud inserts (the M3 × 20 bolts and spacers that come with the 1061 aren't used) |
+| 4 | M3 × 12 bolts | Down through the 1061 and the 5 mm spacers that come with it, into the shelf inserts (the 1061's M3 × 20 bolts are too long) |
 | — | Thin felt or rubber pads (optional) | Under the tube bottoms to protect the panel |
 | — | Velcro strap or Command strips (optional) | Only if the frame rocks |
 
@@ -84,7 +84,7 @@ Edit the `MEASURE` values at the top of `amp_servo_mount.scad`:
 
 | parameter | what |
 |---|---|
-| `pitch` | shaft center-to-center spacing (measured: 1.366" = 34.70 mm) |
+| `pitch`, `reverb_gap` | shaft center-to-center spacing: 34.85 mm for Treble–Mid–Bass, 38.00 mm for Bass–Reverb (outside-to-outside caliper readings minus 1/4") |
 | `nut_af`, `nut_h` | pot nut size across flats, and nut + washer height |
 | `bushing_top`, `shaft_top` | heights above the panel, with the knobs removed |
 | `horn_*` | set for a 19.8 mm aluminum 25T horn (14 mm M3 hole circle). Change them if you use a different horn. (Servo dims are from the goBILDA drawing.) |
@@ -95,9 +95,10 @@ the tube slips over it, the servo holes line up, the coupler turns freely, and t
 
 Then: `openscad -o stl/frame.stl -D 'part="frame"' amp_servo_mount.scad` (and the same for `couplers` and `collars`).
 
-The 1061 board hangs component-side down, under a shelf on the side away from the servo bodies.
-Its lowest parts sit about 24 mm above the panel, and the shelf reaches about 75 mm from the
-shaft line. Check that there's room for this on your amp. Set `board = false` to leave the shelf off.
+The 1061 board sits component-side up on its 5 mm spacers, on a shelf on the side away from the servo
+bodies. The shelf reaches about 70 mm from the shaft line, short of the amp's handle. A 5 mm ridge runs
+down the middle of its underside, 22 mm deep, to stiffen it, with the guitar logo on its side; it comes
+down to about 20 mm above the panel. Set `board = false` to leave the shelf off.
 The set-screw windows face the servo-body side.
 
 Slice with the MK3S PETG settings in `slicer/petg_mk3s.ini` (0.20 mm QUALITY, Prusament PETG,

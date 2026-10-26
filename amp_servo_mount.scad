@@ -13,7 +13,9 @@ part = "assembly";  // "assembly" | "frame" | "test_station" | "coupler_set" | "
 
 /* ---------- Amp ---------- */
 n_pots      = 4;
-pitch       = 34.70;  // measured: 1.366" center-to-center (1.616" outside-to-outside minus 1/4")
+pitch       = 34.85;  // measured: Treble-Mid and Mid-Bass, 41.12-41.25 mm outside-to-outside minus 1/4"
+reverb_gap  = 38.00;  // measured: Bass-Reverb, 44.35 mm outside-to-outside minus 1/4"
+// Pot i = 0 is Reverb, then Bass, Mid, Treble along +X (the handle is toward +Y).
 nut_af      = 12.45;  // measured: pot nut across flats
 washer_d    = 16.0;   // measured: thin flat washer under the nut
 washer_t    = 0.8;    // thin; the collar's recess allows for up to washer_t + 0.4
@@ -62,7 +64,7 @@ setscrew_seat = 1.5; // the hub's set-screw insert sits this far below the surfa
 insert_d   = 3.9;    // hole for the kit's M3 brass inserts (4.2 mm over the knurls): 3.9 fit best on the coupon
 m3_clear   = 3.4;
 ear_insert = 4;      // M3 x 4 inserts in the top face for the servo ears (M3 x 8 bolts and washers)
-board_insert = 5;    // M3 x 5 inserts in the board studs (M3 x 8 bolts up through the board)
+board_insert = 5;    // M3 x 5 inserts in the shelf's top face; the board stands on the 1061's 5 mm spacers
 hub_insert = 4;      // M3 x 4 insert, radial, for the pot hub's set screw (M3 x 6)
 
 /* ---------- Frame ---------- */
@@ -82,19 +84,22 @@ collar_od  = tube_id - 2 * collar_fit;
 collar_h   = nut_h + 2.5;                // socket over the nut and washer, then a lip on top of the nut
 collar_af  = 13.0;                       // hex socket: 13.0 fit-tested snug on the 12.45 mm nut, so the collar can't turn
 
-/* ---------- Phidgets 1061 board, hung under a shelf on the side away from the servo bodies ---------- */
+/* ---------- Phidgets 1061 board, on top of a shelf on the side away from the servo bodies ---------- */
 board            = true;
 board_L          = 58.4;   // 2.300"
 board_W          = 48.3;   // 1.900"
 board_hole_dx    = 50.8;   // 2.000"
 board_hole_dy    = 40.6;   // 1.600"
-board_parts_h    = 11.5;   // 0.453" tallest component, which hangs downward
-stud_h           = 5.0;    // same as the 5 mm spacers supplied with the board
-stud_d           = 8.0;    // room around the insert in its end
-board_gap        = 3.0;    // board edge clearance from the main plate edge
+board_parts_h    = 11.5;   // 0.453" tallest component
+spacer_h         = 5.0;    // the 5 mm spacers supplied with the board, between it and the shelf
+board_gap        = -2.0;   // board edge past the main plate edge (negative: overlaps it, over the ear bolts)
 shelf_t          = 5.7;    // thinner than the main plate; flush with it on the top (print-bed) face
 
-/* ---------- Logo: an electric guitar engraved in the board shelf's top face ---------- */
+/* ---------- Ridge under the board shelf, for stiffness, with the logo on its side ---------- */
+ridge_t    = 5;
+ridge_h    = 22;     // below the shelf's underside
+
+/* ---------- Logo: an electric guitar engraved in the ridge's side ---------- */
 logo       = true;
 logo_len   = 46;     // nut of the headstock to the bottom of the body
 logo_line  = 0.9;    // stroke width: two extrusions, and the layer above only bridges this far
@@ -120,7 +125,7 @@ assert(hubA_z0 > collar_h + 0.5, "pot hub would sit on the nut collar");
 assert(pitch > servo_W + 3, "pitch too tight for side-by-side servos");
 if (pitch < tube_od + 2) echo("WARNING: tubes merge; fine, but check knob spacing");
 
-function x_of(i) = i * pitch;
+function x_of(i) = i == 0 ? 0 : reverb_gap + (i - 1) * pitch;
 
 /* ---------- Frame ---------- */
 module servo_holes() {
@@ -211,8 +216,10 @@ module plate_outline() {
     if (board) {
         // shelf carrying the board
         w = board_L + 8;
-        d = plate_near_edge() + board_gap + board_W + 4;
+        d = shelf_d();
         translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, shelf_z0]) chamfered_box([w, d, shelf_t], chamfer);
+        // ridge down the middle of its underside, along its length
+        translate([frame_cx() - ridge_t / 2, servo_dir < 0 ? 0 : -d, shelf_z0 - ridge_h]) cube([ridge_t, d - chamfer, ridge_h + eps]);
     }
 }
 
@@ -222,15 +229,13 @@ module board_holes(d, h, z0) {
             cylinder(d = d, h = h);
 }
 
-module board_studs() {
-    board_holes(stud_d, stud_h + eps, shelf_z0 - stud_h);
+module board_cuts() {
+    // insert pressed into the top face; the bolt's end runs on through the clearance hole below it
+    board_holes(insert_d, board_insert + 1.5, flange_z - board_insert - 0.5);
+    board_holes(m3_clear, shelf_t + 2, shelf_z0 - 1);
 }
 
-module board_stud_cuts() {
-    // insert in the end of each stud; the bolt's end runs on into the clearance hole above it
-    board_holes(insert_d, board_insert + 1.5, shelf_z0 - stud_h - 1);
-    board_holes(m3_clear, stud_h + shelf_t + 2, shelf_z0 - stud_h - 1);
-}
+function shelf_d() = plate_near_edge() + board_gap + board_W + 4;
 
 module tube(i) {
     translate([x_of(i), 0, 0]) difference() {
@@ -267,14 +272,15 @@ module frame() {
     difference() {
         union() {
             plate_outline();
-            if (board) board_studs();
             for (i = [0 : n_pots - 1]) tube(i);
             // webs tying neighboring tubes together low down, for stiffness
             for (i = [0 : n_pots - 2])
-                translate([x_of(i), -wall, 0]) cube([pitch, 2 * wall, plate_z0]);
+                translate([x_of(i), -wall, 0]) cube([x_of(i + 1) - x_of(i), 2 * wall, plate_z0]);
         }
-        if (board) board_stud_cuts();
-        if (board && logo) translate([frame_cx(), board_cy(), flange_z]) logo_cut(logo_len);
+        if (board) board_cuts();
+        // logo on the ridge's +X side, headstock toward the handle
+        if (board && logo) translate([frame_cx() + ridge_t / 2, -servo_dir * (shelf_d() / 2 + 6), shelf_z0 - ridge_h / 2])
+            rotate([90, 0, 90]) rotate([0, 0, servo_dir < 0 ? 0 : 180]) logo_cut(logo_len);
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
             // keep the webs out of the bore, which runs full width to the bottom so the frame lifts
             // off over the pot hubs; a 45-degree lead-in at the bottom for the collar
@@ -294,12 +300,12 @@ module frame() {
     }
 }
 
-// One station cut from the frame (first tube and its servo mount), for checking fits before
+// One station cut from the frame (the Reverb tube and its servo mount), for checking fits before
 // printing the whole thing: collar fit, servo holes, coupler clearance, set-screw access.
 module test_station() {
     intersection() {
         frame();
-        translate([-pitch / 2, -100, -1]) cube([pitch, 200, flange_z + 2]);
+        translate([-pitch / 2, -100, -1]) cube([pitch, 200, flange_z + 2]);  // stops short of the Bass tube
     }
 }
 
@@ -392,9 +398,9 @@ module ghost_servo(i) {
 }
 
 module ghost_board() {
-    z = shelf_z0 - stud_h - 1.6;
+    z = flange_z + spacer_h;
     color("darkgreen") translate([frame_cx() - board_L / 2, board_cy() - board_W / 2, z]) cube([board_L, board_W, 1.6]);
-    color("dimgray", 0.6) translate([frame_cx() - board_L / 2 + 4, board_cy() - board_W / 2 + 4, z - board_parts_h])
+    color("dimgray", 0.6) translate([frame_cx() - board_L / 2 + 4, board_cy() - board_W / 2 + 4, z + 1.6])
         cube([board_L - 8, board_W - 8, board_parts_h]);
 }
 
@@ -419,9 +425,9 @@ module assembly() {
 }
 
 echo(str("plate underside at z = ", plate_z0, " mm; servo ears at z = ", flange_z, " mm above panel"));
-if (board) echo(str("1061 board hangs component-side down; its lowest parts are ",
-    shelf_z0 - stud_h - 1.6 - board_parts_h, " mm above the panel, and it reaches ",
-    abs(board_cy()) + board_W / 2, " mm from the pot axes"));
+if (board) echo(str("1061 board sits on top of the shelf; the ridge under it comes down to ",
+    shelf_z0 - ridge_h, " mm above the panel, and the shelf reaches ",
+    shelf_d(), " mm from the pot axes"));
 echo(str("tube OD = ", tube_od, " mm; frame length = ", x_of(n_pots - 1) + tube_od + 4, " mm"));
 
 /* ---------- Output ---------- */
