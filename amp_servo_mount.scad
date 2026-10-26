@@ -147,8 +147,8 @@ module servo_body_cut() {
     translate([0, 0, plate_z0 - 1]) cylinder(d = tube_id, h = plate_t + 2);
     // grooves in the top face for the gussets under the ears
     for (sy = [-1, 1])
-        translate([-(ear_rib_w + 0.5) / 2, c + (sy < 0 ? -ear_span / 2 - 1 : servo_L / 2), flange_z - ear_rib_h - 0.6])
-            cube([ear_rib_w + 0.5, (ear_span - servo_L) / 2 + 1, ear_rib_h + 1]);
+        translate([-(ear_rib_w + 0.5) / 2, c + (sy < 0 ? -ear_span / 2 : servo_L / 2), flange_z - ear_rib_h - 0.6])
+            cube([ear_rib_w + 0.5, (ear_span - servo_L) / 2, ear_rib_h + 1]);
     // Where that opening undercuts the tube wall, the wall is cut back with a flare down to the
     // set-screw slot, so it prints plate-down without starting in midair: a radius eases it off
     // vertical, then it narrows at the overhang angle.
@@ -218,8 +218,8 @@ module plate_outline() {
         w = board_L + 8;
         d = shelf_d();
         translate([frame_cx() - w / 2, servo_dir < 0 ? 0 : -d, shelf_z0]) chamfered_box([w, d, shelf_t], chamfer);
-        // ridge down the middle of its underside, along its length
-        translate([frame_cx() - ridge_t / 2, servo_dir < 0 ? 0 : -d, shelf_z0 - ridge_h]) cube([ridge_t, d - chamfer, ridge_h + eps]);
+        // ridge across the middle of its underside, parallel to the row of servos
+        translate([frame_cx() - w / 2 + chamfer, board_cy() - ridge_t / 2, shelf_z0 - ridge_h]) cube([w - 2 * chamfer, ridge_t, ridge_h + eps]);
     }
 }
 
@@ -278,9 +278,9 @@ module frame() {
                 translate([x_of(i), -wall, 0]) cube([x_of(i + 1) - x_of(i), 2 * wall, plate_z0]);
         }
         if (board) board_cuts();
-        // logo on the ridge's +X side, headstock toward the handle
-        if (board && logo) translate([frame_cx() + ridge_t / 2, -servo_dir * (shelf_d() / 2 + 6), shelf_z0 - ridge_h / 2])
-            rotate([90, 0, 90]) rotate([0, 0, servo_dir < 0 ? 0 : 180]) logo_cut(logo_len);
+        // logo on the ridge's side facing the handle
+        if (board && logo) translate([frame_cx(), board_cy() - servo_dir * ridge_t / 2, shelf_z0 - ridge_h / 2])
+            rotate([90, 0, servo_dir < 0 ? 180 : 0]) logo_cut(logo_len);
         for (i = [0 : n_pots - 1]) translate([x_of(i), 0, 0]) {
             // keep the webs out of the bore, which runs full width to the bottom so the frame lifts
             // off over the pot hubs; a 45-degree lead-in at the bottom for the collar
