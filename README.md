@@ -148,3 +148,9 @@ where the chickenhead pointed at 0.
 
 - Keep the servo wiring away from the input jack and route it out the back.
 - The servo system makes no electrical connection to the amp; keep it that way (plastic couplers isolate the pot shafts).
+
+## License
+
+[MIT](LICENSE). This covers the code, the OpenSCAD model and the print files.
+
+See the [wiki](https://github.com/robertbedichek/ampservos/wiki) for a fuller explanation of the design.
