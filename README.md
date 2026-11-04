@@ -1,7 +1,7 @@
 # ampservos
 
 Computer control of the Treble, Mid, Bass and Reverb knobs on a Carr Super Bee,
-using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into the amp.
+using four hobby servos driven by a Phidgets 1061 from a Linux server over USB. Nothing gets drilled into the amp.
 
 ![panel](docs/amp_panel.jpeg) ![assembly](docs/assembly.png)
 
@@ -17,8 +17,8 @@ using four hobby servos driven by a Phidgets RCC1000. Nothing gets drilled into 
   have to line up perfectly. The pot hub grips the 1/4" shaft with M3 set screws
   (two, 90° apart, in brass heat-set inserts), which you reach through a slot in the tube. The servo hub screws to the
   20 mm aluminum disc horn on the servo.
-- **Electronics:** VINT hub → RCC1000 (16-channel RC servo Phidget) set to 6 V servo
-  power, or an older 1061 AdvancedServo 8-Motor on USB. Channels 0–3 = treble, mid, bass, reverb.
+- **Electronics:** a Linux server connects directly by USB to a Phidgets 1061 AdvancedServo
+  8-Motor, with no VINT hub. Channels 0–3 = treble, mid, bass, reverb. An RCC1000 on a VINT hub also works.
 - **Software:** `ampservos.py` engages each servo only while it moves, then releases it.
   The pot's friction holds the setting, and the amp never hears PWM chatter or a servo hunting.
 
@@ -30,16 +30,13 @@ Besides the printed frame, couplers and nut collars. Prices are rough.
 
 | Qty | Part | Notes | ~Price |
 |---|---|---|---|
-| 1 | **RCC1000** 16× RC Servo Phidget | Drives all four servos on channels 0–3 | $30 |
-| 1 | **HUB0000** VINT Hub Phidget (USB) | Or HUB5000 for network; skip if you have a free VINT port | $30 |
-| 1 | VINT / Phidget cable | Hub to RCC1000; usually included, get a longer one if needed | $3 |
-| 1 | USB cable for the hub | | — |
-| 1 | 12 V 2 A DC supply for the RCC1000 | Check the RCC1000 spec page for its input range | $15 |
+| 1 | **PhidgetAdvancedServo 8-Motor (1061)** | Drives all four servos on channels 0–3; connects straight to USB. Pulses go to 2.7 ms, so the full 300° is available. Servo power is fixed at 5 V, within the goBILDA's 4.8–7.4 V range. | — |
+| 1 | USB cable | Linux server to the 1061 | — |
+| 1 | 12 V 2 A DC supply | The 1061 takes 6–15 V in | $15 |
 
-**Alternative:** an older **PhidgetAdvancedServo 8-Motor (1061)** works in place of the RCC1000,
-hub and cable. Its pulses go to 2.7 ms, so the full 300° is available. Servo power is fixed at
-5 V, which is within the goBILDA's 4.8–7.4 V range. It takes 6–15 V in, so the same 12 V supply
-works, and it connects straight to USB. Set `CONTROLLER = "1061"` in `ampservos.py`.
+`CONTROLLER` in `ampservos.py` must be `"1061"` for this setup.
+
+**Alternative, not used on this rig:** an **RCC1000** 16× RC Servo Phidget (about $30) on a **HUB0000** VINT hub (about $30), joined by a VINT cable, runs servo power at 6 V. Check the RCC1000 spec page for its input range, and set `CONTROLLER = "RCC1000"`.
 
 ### Servos
 
@@ -76,7 +73,7 @@ one nut collar. Set `insert_d` (3.9 mm on a Prusa MK3S in PETG) to the hole wher
 wall, and check that the collar sits snugly on a pot nut. The guitar logo cut into the coupon's underside
 shows how the one on the frame's board shelf will print, since both are on the bed face.
 
-**Rough total:** $260–300.
+**Rough total:** $260–300, estimated with the RCC1000 and hub. The 1061 changes this by the difference in controller cost.
 
 ## Before printing: measure these
 
